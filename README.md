@@ -4,7 +4,8 @@ The repository for the COSI comprehensive pipeline.
 1) Install in the same way as the comprehensive pipeline. Substitute only "fast" -> "comprehensive" whenever needed.
 Warning: for the moment I download a specific version of cosipy from a repostory of Laura.
 
-AFTER INSTALLATION IS SUCCESSFUL
+AFTER INSTALLATION IS SUCCESSFUL.
+
 How to test this first version:
 2) create under 
 ../cosiflow/data/
