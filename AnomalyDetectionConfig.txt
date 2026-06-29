@@ -1,0 +1,9 @@
+input_file /home/gamma/workspace/data/transient/2025_01/250101001u/products/tsel_binned_data_local_galbk_grbdc3.hdf5
+model_file Model_AnomalyDetection_2.pth
+resolution_angle 50
+resolution_time 1
+plotting_window 3
+loss_threshold 0.1
+orientation_file DC3_final_530km_3_month_with_slew_1sbins_GalacticEarth_SAA.ori
+true_position 19.247158169676332 41.64606387753116 # GRB11
+file_out output_anomaly.txt

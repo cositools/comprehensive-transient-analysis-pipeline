@@ -1,0 +1,12 @@
+py7zr
+jupyter
+notebook
+numpy
+scipy
+pandas
+matplotlib
+psutil
+torch
+setuptools<65.0.0  # Versione che include ancora pkg_resources (richiesto da threeML)
+-e git+https://github.com/ldigesu/cosipy_lightcurves.git@cosipy_asi_pipeline#egg=cosipy
+astro-gdt
