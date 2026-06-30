@@ -29,6 +29,7 @@ How to test this first version:
 	data_grbdc3_full.fits
 	under
 	../cosiflow/data/obs/2025_01/250101/ged/
+
 	I can provide any simulated GRB under request. 
 
 3) Put:
