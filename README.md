@@ -1,17 +1,18 @@
 # comprehensive-transient-analysis-pipeline
 The repository for the COSI comprehensive pipeline.
 
-1) Install in the same way as the comprehensive pipeline. Substitute only "fast" -> "comprehensive" whenever needed.
+Install in the same way as the comprehensive pipeline. Substitute only "fast" -> "comprehensive" whenever needed.
 Warning: for the moment I download a specific version of cosipy from a repostory of Laura.
 
-AFTER INSTALLATION IS SUCCESSFUL.
+# AFTER THE INSTALLATION IS SUCCESSFUL.
 
 How to test this first version:
-2) create under 
-../cosiflow/data/
-the following structure
 
-# mkdir ../cosiflow/data/obs/2025_01/250101/auxil 
+1) create under 
+../cosiflow/data/
+the following structure:
+
+mkdir ../cosiflow/data/obs/2025_01/250101/auxil 
 
 mkdir ../cosiflow/data/obs/2025_01/250101/ged
 
