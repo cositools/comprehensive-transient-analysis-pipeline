@@ -1,6 +1,7 @@
 # comprehensive-transient-analysis-pipeline
 The repository for the COSI comprehensive pipeline.
 
+# INSTALLATION
 Install in the same way as the comprehensive pipeline. Substitute only "fast" -> "comprehensive" whenever needed.
 Warning: for the moment I download a specific version of cosipy from a repostory of Laura.
 
@@ -9,20 +10,20 @@ Warning: for the moment I download a specific version of cosipy from a repostory
 How to test this first version:
 
 1) create under 
-../cosiflow/data/
-the following structure:
+	../cosiflow/data/
+	the following structure:
 
-mkdir ../cosiflow/data/obs/2025_01/250101/auxil 
+	mkdir ../cosiflow/data/obs/2025_01/250101/auxil 
 
-mkdir ../cosiflow/data/obs/2025_01/250101/ged
+	mkdir ../cosiflow/data/obs/2025_01/250101/ged
 
-mkdir ../cosiflow/data/transient/2025_01/250101001t/plots
+	mkdir ../cosiflow/data/transient/2025_01/250101001t/plots
 
-mkdir ../cosiflow/data/transient/2025_01/250101001t/products
+	mkdir ../cosiflow/data/transient/2025_01/250101001t/products
 
-mkdir ../cosiflow/data/transient/2025_01/250101001u/plots 
+	mkdir ../cosiflow/data/transient/2025_01/250101001u/plots 
 
-mkdir ../cosiflow/data/transient/2025_01/250101001u/products
+	mkdir ../cosiflow/data/transient/2025_01/250101001u/products
 
 2) Put 
 data_grbdc3_full.fits
