@@ -254,6 +254,7 @@ bindata_bk:
   tmin: null
   tmax: null
   coo_sys: "local"
+  sparse: True
 
 bindata_soubk:
   response:
@@ -266,6 +267,7 @@ bindata_soubk:
   tmin: null
   tmax: null
   coo_sys: "local"
+  sparse: True
 
 
 tsdetect:
@@ -296,7 +298,7 @@ tsdetect:
       tstop: null
   coo_sys: "local"
   nside: 8
-  iterative: false
+  multiresolution: false
 
 threemlfit_pw:
   model: # This is a list of sources that will be read by astromodels.core.model_parser.ModelParser

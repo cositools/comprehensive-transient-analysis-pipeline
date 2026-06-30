@@ -8,5 +8,5 @@ matplotlib
 psutil
 torch
 setuptools<65.0.0  # Versione che include ancora pkg_resources (richiesto da threeML)
--e git+https://github.com/ldigesu/cosipy_lightcurves.git@ed49820f536ed5f483cd15705503f8a329c5a3e3#egg=cosipy
+-e git+https://github.com/ldigesu/cosipy_lightcurves.git@1ff1d4ac2b84a5b8bee4e2c45819d8ffc9aae89f#egg=cosipy
 astro-gdt
