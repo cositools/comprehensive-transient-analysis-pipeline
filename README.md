@@ -10,11 +10,16 @@ How to test this first version:
 2) create under 
 ../cosiflow/data/
 the following structure
-mkdir ../cosiflow/data/obs/2025_01/250101/auxil
+mkdir ../cosiflow/data/obs/2025_01/250101/auxil 
+
 mkdir ../cosiflow/data/obs/2025_01/250101/ged
+
 mkdir ../cosiflow/data/transient/2025_01/250101001t/plots
+
 mkdir ../cosiflow/data/transient/2025_01/250101001t/products
+
 mkdir ../cosiflow/data/transient/2025_01/250101001u/plots 
+
 mkdir ../cosiflow/data/transient/2025_01/250101001u/products
 
 2) Put 
