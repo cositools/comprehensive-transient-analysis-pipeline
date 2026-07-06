@@ -382,7 +382,7 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     longMax=0
     tmax=0
     
-    for t in range(0,binNumTime-20,20):
+    for t in range(0,binNumTime,20):
         image_for_input = imagePlotX_Z_t_test[0:1,:,:,:,int(t):int(t)+20].sum(dim=4)
         outTEST=model(image_for_input)
         lightCurveVal=image_for_input[0,0:50,0:100,0:50].sum(dim=2).sum(dim=1).sum(dim=0)
