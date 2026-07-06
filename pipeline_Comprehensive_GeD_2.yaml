@@ -366,6 +366,8 @@ general_pipeline_config:
     1841898000
   t_scan_delta:
     10
+  t_range_type:
+    inputpar
   directory_output:
     /home/gamma/workspace/data/transient/2025_01/250101001u/products/
   external_trigger_list:

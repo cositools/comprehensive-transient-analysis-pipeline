@@ -15,14 +15,22 @@ def execute_bindata_grb(cosipy_yaml_input,lib_dir):
     import cosipy
     from cosipy.pipeline.task.task import cosi_bindata
     import subprocess
-    from yayc import Configurator    
+    from yayc import Configurator
     print('Binning source')
-    
+    from funzioni_comuni import read_time_frame
+    time_tot_start,time_tot_stop=read_time_frame()
+    print(time_tot_start,time_tot_stop)
+
     full_config = Configurator.open(cosipy_yaml_input)
     t_scan_start_source=full_config["general_pipeline_config"]["t_scan_start_source"]
     t_scan_stop_source=full_config["general_pipeline_config"]["t_scan_stop_source"]
     directory_output =full_config["general_pipeline_config"]["directory_output"]
-     
+    t_range_type=full_config["general_pipeline_config"]["t_range_type"]
+    if t_range_type=="full":
+        t_scan_start_source=time_tot_start
+        t_scan_stop_source=time_tot_stop
+        print('Using data full range ',t_scan_start_source,t_scan_stop_source)
+        
     args=['--config',cosipy_yaml_input,'--config_group','bindata_soubk','--overwrite', '--suffix','galbk_grbdc3','--output-dir',directory_output,'--tmin', str(t_scan_start_source), '--tmax', str(t_scan_stop_source)]
     cosi_bindata (argv=args)
     
@@ -32,12 +40,16 @@ def execute_bindata_background(cosipy_yaml_input,lib_dir):
     import subprocess
     from yayc import Configurator
     print('Binning background ')
-    
+    from funzioni_comuni import read_time_frame
+    time_tot_start,time_tot_stop=read_time_frame()
+    print(time_tot_start,time_tot_stop)
+
     full_config = Configurator.open(cosipy_yaml_input)
     t_scan_start_back=full_config["general_pipeline_config"]["t_scan_start_back"]
     t_scan_stop_back=full_config["general_pipeline_config"]["t_scan_stop_back"]
     directory_output =full_config["general_pipeline_config"]["directory_output"]
-     
+    t_range_type=full_config["general_pipeline_config"]["t_range_type"]
+
     args=['--config',cosipy_yaml_input,'--config_group','bindata_bk','--overwrite', '--suffix','Background_Model','--output-dir',directory_output,'--tmin', str(t_scan_start_back), '--tmax', str(t_scan_stop_back)]
     cosi_bindata (argv=args)
 
@@ -48,15 +60,25 @@ def execute_tsmap_scan(cosipy_yaml_input,lib_dir):
     from contextlib import redirect_stdout
     from cosipy.pipeline.task.task import cosi_tsdetect
     from yayc import Configurator
-    full_config = Configurator.open(cosipy_yaml_input)
+    import sys
+    sys.path.append(lib_dir)
+    from funzioni_comuni import read_time_frame
+    time_tot_start,time_tot_stop=read_time_frame()
 
+    full_config = Configurator.open(cosipy_yaml_input)
     t_scan_start_source=full_config["general_pipeline_config"]["t_scan_start_source"]
     t_scan_stop_source=full_config["general_pipeline_config"]["t_scan_stop_source"]
+    t_range_type=full_config["general_pipeline_config"]["t_range_type"]
     t_scan_delta=full_config["general_pipeline_config"]["t_scan_delta"]
     directory_output =full_config["general_pipeline_config"]["directory_output"]
 
-    subprocess.run('mkdir '+directory_output+'timescan', shell=True)
+    if t_range_type=="full":
+        t_scan_start_source=time_tot_start
+        t_scan_stop_source=time_tot_stop
+        print('Using data full range ',t_scan_start_source,t_scan_stop_source)
 
+    subprocess.run('mkdir '+directory_output+'timescan', shell=True)
+    
     fileNum=0
     print('|||||||||||||||||||||||||||||||||||||||||||||||',t_scan_start_source,t_scan_stop_source,t_scan_delta)
     for time in range(t_scan_start_source,t_scan_stop_source,t_scan_delta):
@@ -68,9 +90,7 @@ def execute_tsmap_scan(cosipy_yaml_input,lib_dir):
         args=['--config',cosipy_yaml_input,'--output-dir',directory_output+'timescan','--overwrite','--tstart', str(tstart), '--tstop', str(tstop)]
         with open(outputFile, "w") as f:
             with redirect_stdout(f):
-                print('cosi_tsdetect begin')
                 cosi_tsdetect (argv=args)
-                print('cosi_tsdetect end')
                 subprocess.run('mv '+directory_output+'timescan/raw_ts.png '+newpngFileName, shell=True)
         fileNum+=1
 
@@ -120,12 +140,15 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
     import sys
     sys.path.append(lib_dir)
     import healpy as hp
-    from funzioni_comuni import read_base_pipeline_params,read_file_histo,read_anomaly_detection_config
+    from funzioni_comuni import read_base_pipeline_params,read_file_histo,read_anomaly_detection_config,read_time_frame
     from models import Autoencoder
     from astropy.time import Time
     from histpy import Histogram
     from mhealpy import HealpixMap
     from scoords import SpacecraftFrame
+    
+    time_tot_start,time_tot_stop=read_time_frame()
+    print(time_tot_start,time_tot_stop)
 
     from yayc import Configurator
     full_config = Configurator.open(cosipy_yaml_input)
@@ -135,7 +158,13 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
     directory_output =full_config["general_pipeline_config"]["directory_output"]
     anomaly_config =full_config["general_pipeline_config"]["anomaly_config"]
     ori_file2 = full_config["general_pipeline_config"]["ori_file"]
+    t_range_type=full_config["general_pipeline_config"]["t_range_type"]
 
+    if t_range_type=="full":
+        t_scan_start_source=time_tot_start
+        t_scan_stop_source=time_tot_stop
+        print('Using data full range ',t_scan_start_source,t_scan_stop_source)
+    
     criterion = nn.CrossEntropyLoss()
 
     input_file_name,model_file,resolutionImage,timeBin,plotting_window,ori_file,true_b,true_l,threshold_loss,out_file=read_anomaly_detection_config(anomaly_config)
@@ -146,8 +175,12 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
     
     data_full     = Histogram.open(str(input_file_name))
     binNumTime = int(data_full.project('Time').nbins)
-    imagePlotX_Z_t_test = read_file_histo(data_full,t0_test,t0_test+binNumTime,resolutionImage,binNumTime,FileName,binNumTime,numberEventstest)
 
+    print('READFILE')
+    imagePlotX_Z_t_test = read_file_histo(data_full,t0_test,t0_test+binNumTime,resolutionImage,binNumTime,FileName,binNumTime,numberEventstest)
+    print('READFILE DONE')
+
+    
     model = Autoencoder()
     state = torch.load(lib_dir+str(model_file))
     model.load_state_dict(state)
@@ -164,14 +197,15 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
     time_detection_first=-1
     time_detection_last=-1
 
+    print(binNumTime,' time bins')
     for t in range(0,binNumTime):
         image_for_input = imagePlotX_Z_t_test[:,:,:,:,int(t)]
         outTEST=model(image_for_input)
         lossPlot = criterion(outTEST,image_for_input)
         frameNum[int(t)]=int(t)
         lossTensor[int(t)]=float(lossPlot)
-        outClone=outTEST.clone()
-        imageClone=image_for_input.clone()
+        outClone=outTEST.detach()
+        imageClone=image_for_input.detach()
         lossMap_3D_tmp[0:1,:,:,:,int(t)] += (outClone - imageClone)**2
         signalMap_3D_tmp[0:1,:,:,:,int(t)] += imageClone
         modelMap_3D_tmp[0:1,:,:,:,int(t)] += outClone
@@ -183,6 +217,7 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
         if lossPlot>max_loss:
             max_loss=lossPlot
             max_loss_time = int(t)
+        print('done time ',t)
 
     # save the timing of the transient
     fout_trigg= open(directory_output+out_file,'w')
@@ -194,7 +229,7 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
         print('max_loss ',float(max_loss),file=fout_trigg)
     fout_trigg.close()
     
-    print('NumBinsTime ######################################### ',binNumTime)
+    print('NumBinsTime ######################################### ',binNumTime,max_loss_time,plotting_window)
     skymaptoplot = torch.t(lossMap_3D_tmp[0,:,:,0:10,int(max_loss_time-plotting_window):int(max_loss_time+plotting_window)].sum(dim=3).sum(dim=2))
     
     skymaptoplot_data = torch.t(signalMap_3D_tmp[0,:,:,0:10,int(max_loss_time-plotting_window):int(max_loss_time+plotting_window)].sum(dim=3).sum(dim=2))
@@ -228,7 +263,7 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
     plt.ylabel('Bin Y')
     plt.colorbar()
     plt.savefig(directory_output+'imageLoss_2DPLot.png')
-
+    
     plt.figure(figsize=(16.03, 10.41) ) 
     plt.imshow(skymaptoplot_data.detach().numpy())
     plt.gca().invert_yaxis() 
@@ -248,7 +283,7 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
     plt.clim(0,10)
     plt.colorbar()
     plt.savefig(directory_output+'imageData_2DPLot_2.png')
-
+    
     plt.figure(figsize=(16.03, 10.41) ) 
     plt.imshow(skymaptoplot_model.detach().numpy())
     plt.gca().invert_yaxis() 
@@ -272,7 +307,7 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
     ori = load_ori(str(ori_file2))
     tstart=Time(t_scan_start_source, format='unix')
     tstop=Time(t_scan_stop_source, format='unix')
-    tmiddle=(t_scan_start_source+t_scan_stop_source)/2.
+    tmiddle=t_scan_start_source+max_loss_time
     m = HealpixMap(nside = 8, coordsys=SpacecraftFrame( attitude = ori.interp_attitude(Time(tmiddle, format='unix')   )))
 
     for i in range(data_full.project('PsiChi').nbins):
@@ -280,7 +315,7 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
         m[i]+=content
         
     fig,ax = plt.subplots(subplot_kw = {'projection':'mollview', 'coord':'G'})
-    m.plot(ax=ax,vmin=10)
+    m.plot(ax=ax,vmin=0)
     ax.scatter(true_l, true_b, marker='*', color='red', s=50, zorder=5, transform=ax.get_transform('world'))
     plt.savefig(directory_output+'imageLoss_GalCoord_rot.png')
 
@@ -297,7 +332,7 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     import sys
     sys.path.append(lib_dir)
     import healpy as hp
-    from funzioni_comuni import read_base_pipeline_params,read_file_histo2,read_anomaly_detection_config,read_file_histo_second
+    from funzioni_comuni import read_base_pipeline_params,read_file_histo2,read_anomaly_detection_config,read_file_histo_second,read_time_frame
     from models import CNN3D
     from astropy.time import Time
     from histpy import Histogram
@@ -306,6 +341,9 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     from scoords import SpacecraftFrame
     from astropy.coordinates import SkyCoord
     import astropy.units as u
+
+    time_tot_start,time_tot_stop=read_time_frame()
+    print(time_tot_start,time_tot_stop)
 
     from yayc import Configurator
     full_config = Configurator.open(cosipy_yaml_input)
@@ -317,7 +355,13 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     threshold_TS=full_config["general_pipeline_config"]["ts_threshold"]
     anomaly_config =full_config["general_pipeline_config"]["anomaly_config"]
     ori_file2 = full_config["general_pipeline_config"]["ori_file"]
+    t_range_type=full_config["general_pipeline_config"]["t_range_type"]
 
+    if t_range_type=="full":
+        t_scan_start_source=time_tot_start
+        t_scan_stop_source=time_tot_stop
+        print('Using data full range ',t_scan_start_source,t_scan_stop_source)
+    
     input_file_name,model_file,resolutionImage,timeBin,plotting_window,ori_file,true_b,true_l,threshold_loss,out_file=read_anomaly_detection_config(anomaly_config)
     
     FileName=directory_output+"FileOut_test_3DCNN_"
@@ -338,7 +382,7 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     longMax=0
     tmax=0
     
-    for t in range(0,binNumTime,20):
+    for t in range(0,binNumTime-20,20):
         image_for_input = imagePlotX_Z_t_test[0:1,:,:,:,int(t):int(t)+20].sum(dim=4)
         outTEST=model(image_for_input)
         lightCurveVal=image_for_input[0,0:50,0:100,0:50].sum(dim=2).sum(dim=1).sum(dim=0)
@@ -349,7 +393,6 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
             longMax_cos=outTEST[0,1].detach().numpy()
             longMax_sin=outTEST[0,2].detach().numpy()
             longMax=np.rad2deg(np.atan2(longMax_sin,longMax_cos))
-
             tmax=t
 
     print(tmax,latMax,longMax)
@@ -389,7 +432,7 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
 
     fig,ax = plt.subplots(subplot_kw = {'projection':'mollview', 'coord':'G'})
     m.plot(ax=ax,vmin=0)
-    ax.scatter(true_l,true_b, marker='*',  color='pink', s=50, zorder=5, transform=ax.get_transform('world'))
+    ax.scatter(true_l,true_b, marker='*',  color='red', s=50, zorder=5, transform=ax.get_transform('world'))
     
     c = SkyCoord(lon = longMax*u.deg, lat = (90 - latMax)*u.deg, frame = SpacecraftFrame(attitude = attitude) )
     coordin_new=c.transform_to('galactic')
@@ -417,12 +460,15 @@ def execute_threemlfit(cosipy_yaml_input,lib_dir,fitmodel,scanvar):
     from cosipy.pipeline.task.task import cosi_threemlfit
     import sys
     sys.path.append(lib_dir)
-    from funzioni_comuni import read_cosi_ts_detect,read_base_pipeline_params,format_override_val,read_trigger_content_multiple_yaml
+    from funzioni_comuni import read_cosi_ts_detect,read_base_pipeline_params,format_override_val,read_trigger_content_multiple_yaml,read_time_frame
     from PIL import Image, ImageDraw, ImageFont
     from threeML import JointLikelihood,DataList,XYLike,Model,PointSource,Constant
     import numpy as np
     import torch
-            
+
+    time_tot_start,time_tot_stop=read_time_frame()
+    print(time_tot_start,time_tot_stop)
+
     from yayc import Configurator
     full_config = Configurator.open(cosipy_yaml_input)
     t_scan_start_source=full_config["general_pipeline_config"]["t_scan_start_source"]
@@ -431,6 +477,12 @@ def execute_threemlfit(cosipy_yaml_input,lib_dir,fitmodel,scanvar):
     directory_output =full_config["general_pipeline_config"]["directory_output"]
     trigger_list=full_config["general_pipeline_config"]["external_trigger_list"]
     threshold_TS=full_config["general_pipeline_config"]["ts_threshold"]
+    t_range_type=full_config["general_pipeline_config"]["t_range_type"]
+
+    if t_range_type=="full":
+        t_scan_start_source=time_tot_start
+        t_scan_stop_source=time_tot_stop
+        print('Using data full range ',t_scan_start_source,t_scan_stop_source)
     
     externalTrigger_start,externalTrigger_stop,flag_trigger = read_trigger_content_multiple_yaml(lib_dir,trigger_list)
     
@@ -644,7 +696,6 @@ def build_pdf_file(cosipy_yaml_input,lib_dir):
     draw_anomaly4.text((0, 0),'Anomaly detection loss projected',font=font_anomaly,fill=(255, 0, 0, 255))
     pages.append(out_anomaly4.convert("RGB"))
     
-    
     img_anomaly5 = Image.open(directory_output+'CNNSignal.png')
     txt_anomaly5 = Image.new("RGBA", img_anomaly5.size)
     out_anomaly5 = Image.alpha_composite(img_anomaly5, txt_anomaly5)
@@ -661,7 +712,6 @@ def build_pdf_file(cosipy_yaml_input,lib_dir):
         format="PDF",
         append_images=pages[1:])
 
-   
 
 def build_spectral_fit(cosipy_yaml_input,lib_dir,modeltoplot):
     import cosipy
@@ -960,9 +1010,9 @@ def cleanup_and_format(cosipy_yaml_input,lib_dir):
     import sys
     import subprocess
     sys.path.append(lib_dir)
-    from funzioni_comuni import read_base_pipeline_params,read_trigger_content_multiple_yaml
+    from funzioni_comuni import read_base_pipeline_params,read_trigger_content_multiple_yaml,check_start_stop_time
     from threeML import JointLikelihood,DataList,XYLike,Model,PointSource,Constant
-    
+
     from yayc import Configurator
     full_config = Configurator.open(cosipy_yaml_input)
     t_scan_start_source=full_config["general_pipeline_config"]["t_scan_start_source"]
@@ -995,4 +1045,5 @@ def cleanup_and_format(cosipy_yaml_input,lib_dir):
     # since I cannot include the python_callable in the branch I need a tmp file with the list of external triggers
     subprocess.run('cat '+trigger_list+' > /home/gamma/tmp_trigger_list',shell=True)
 
-
+    # check min and max time of the unbinned input file. Save the info in a tmp file
+    start_time,stop_time=check_start_stop_time(lib_dir,cosipy_yaml_input,'/home/gamma/workspace/data/')

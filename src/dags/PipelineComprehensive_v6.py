@@ -70,7 +70,7 @@ def build_custom(dag):
         dag=dag,
     )
     #######################################
-
+    
     #######################################
     # TS map scan
     def ts_map_scan(config_path: str, lib_dir: str):
@@ -347,7 +347,7 @@ def build_custom(dag):
     
     join = EmptyOperator(task_id="join")
     join2 = EmptyOperator(task_id="join2")
-
+    
     ######### wiring definition #####
     cleanup_task>>[ged_data_binning,ged_data_binning_bk]>>join
     join>>[ged_ts_map_scan,transient_id_anomaly_task,check_external_funct]
@@ -355,11 +355,6 @@ def build_custom(dag):
     ged_ts_map_scan>>fittask_scan>>join2
     transient_id_anomaly_task>>localization_cnn_task>>join2
     join2>>build_pdf_task>>merge_spectral_fit_multiple>>build_alert_task
-    
-    #transient_id_anomaly_task>>localization_cnn_task>>build_pdf_task
-    #localization_cnn_task
-    
-
     ################################
     
 with COSIDAG(
