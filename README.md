@@ -52,7 +52,9 @@ How to test this first version:
 
 	-externalTriggerInfos3.yaml
 
-	-AnomalyDetectionConfig.txt
+	-AnomalyDetectionConfig.yaml
+
+	-CNNLocalizationConfig.yaml
 
 	under
 	../cosiflow/data/obs/2025_01/250101/auxil/
