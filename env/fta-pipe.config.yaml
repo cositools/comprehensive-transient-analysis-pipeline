@@ -38,7 +38,6 @@ environments:
   # Environment 1: Stable cosipy environment
   cosipy:
     requirements: env/requirements.txt
-    requirements_no_deps: env/requirements_nodeps.txt
     venv_path: /home/gamma/envs/cosipy
     enabled: true
     description: "Stable cosipy environment"
@@ -46,7 +45,6 @@ environments:
   
   cosipy_laura:
     requirements: env/requirements_laura.txt
-    requirements_no_deps: env/requirements_nodeps_laura.txt
     venv_path: /home/gamma/envs/cosipy_laura
     enabled: true
     description: "Laura cosipy branch environment"
