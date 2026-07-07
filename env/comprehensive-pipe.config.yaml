@@ -1,4 +1,4 @@
-# fta-pipe.config.yaml
+# comprehensive-pipe.config.yaml
 # Configuration file for Fast Transient Analysis Pipeline module installation using 
 #    cosipy Python virtual environment
 # This file must be placed in the module root directory (same level as src/, env/, etc.)
