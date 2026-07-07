@@ -375,6 +375,8 @@ general_pipeline_config:
   ts_threshold:
      10
   anomaly_config:
-    /home/gamma/workspace/data/obs/2025_01/250101/auxil/AnomalyDetectionConfig.txt
+    /home/gamma/workspace/data/obs/2025_01/250101/auxil/AnomalyDetectionConfig.yaml
+  cnn_config:
+    /home/gamma/workspace/data/obs/2025_01/250101/auxil/CNNLocalizationConfig.yaml
   ori_file:
     /home/gamma/workspace/data/obs/2025_01/250101/auxil/DC3_final_530km_3_month_with_slew_1sbins_GalacticEarth_SAA.ori

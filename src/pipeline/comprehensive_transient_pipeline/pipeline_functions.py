@@ -167,7 +167,15 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
     
     criterion = nn.CrossEntropyLoss()
 
-    input_file_name,model_file,resolutionImage,timeBin,plotting_window,ori_file,true_b,true_l,threshold_loss,out_file=read_anomaly_detection_config(anomaly_config)
+    full_config2 = Configurator.open(anomaly_config)
+    input_file_name = full_config2["input_file"]
+    model_file = full_config2["model_file"]
+    resolutionImage = full_config2["resolution_angle"]
+    plotting_window =  full_config2["plotting_window"]
+    threshold_loss = full_config2["loss_threshold"]
+    true_b =  full_config2["true_position_b"]
+    true_l =  full_config2["true_position_l"]
+    out_file = full_config2["file_out"]
     
     FileName=directory_output+"FileOut_test_back_full_backgr"
     numberEventstest=1
@@ -180,7 +188,6 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
     imagePlotX_Z_t_test = read_file_histo(data_full,t0_test,t0_test+binNumTime,resolutionImage,binNumTime,FileName,binNumTime,numberEventstest)
     print('READFILE DONE')
 
-    
     model = Autoencoder()
     state = torch.load(lib_dir+str(model_file))
     model.load_state_dict(state)
@@ -353,16 +360,23 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     directory_output =full_config["general_pipeline_config"]["directory_output"]
     trigger_list=full_config["general_pipeline_config"]["external_trigger_list"]
     threshold_TS=full_config["general_pipeline_config"]["ts_threshold"]
-    anomaly_config =full_config["general_pipeline_config"]["anomaly_config"]
+    cnn_config =full_config["general_pipeline_config"]["cnn_config"]
     ori_file2 = full_config["general_pipeline_config"]["ori_file"]
     t_range_type=full_config["general_pipeline_config"]["t_range_type"]
-
+    
     if t_range_type=="full":
         t_scan_start_source=time_tot_start
         t_scan_stop_source=time_tot_stop
         print('Using data full range ',t_scan_start_source,t_scan_stop_source)
     
-    input_file_name,model_file,resolutionImage,timeBin,plotting_window,ori_file,true_b,true_l,threshold_loss,out_file=read_anomaly_detection_config(anomaly_config)
+    full_config2 = Configurator.open(cnn_config)
+    input_file_name = full_config2["input_file"]
+    model_file = full_config2["model_file"]
+    resolutionImage = full_config2["resolution_angle"]
+    plotting_window =  full_config2["plotting_window"]
+    true_b =  full_config2["true_position_b"]
+    true_l =  full_config2["true_position_l"]
+    stepinterval = full_config2["step_interval"]
     
     FileName=directory_output+"FileOut_test_3DCNN_"
     numberEventstest=1
@@ -374,7 +388,7 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     print('########################### ',imagePlotX_Z_t_test.shape,binNumTime)
     
     model = CNN3D()
-    state = torch.load(lib_dir+'Model_3DCNN_newTarget.pth')
+    state = torch.load(lib_dir+model_file)
     model.load_state_dict(state)
 
     lightCurveMax=0
@@ -382,8 +396,8 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     longMax=0
     tmax=0
     
-    for t in range(0,binNumTime,20):
-        image_for_input = imagePlotX_Z_t_test[0:1,:,:,:,int(t):int(t)+20].sum(dim=4)
+    for t in range(0,binNumTime-stepinterval,stepinterval):
+        image_for_input = imagePlotX_Z_t_test[0:1,:,:,:,int(t):int(t)+stepinterval].sum(dim=4)
         outTEST=model(image_for_input)
         lightCurveVal=image_for_input[0,0:50,0:100,0:50].sum(dim=2).sum(dim=1).sum(dim=0)
         print(np.rad2deg(outTEST[0,0].detach().numpy()),outTEST[0,1].detach().numpy(),outTEST[0,2].detach().numpy(),lightCurveVal)
@@ -401,7 +415,7 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     
     print(tmax,latMax,longMax)
 
-    skymaptoplot = imagePlotX_Z_t_test[0,:,:,0:10,tmax:tmax+20].sum(dim=3).sum(dim=2)
+    skymaptoplot = imagePlotX_Z_t_test[0,:,:,0:10,tmax:tmax+stepinterval].sum(dim=3).sum(dim=2)
     
     #####################################
     ori = load_ori(str(ori_file2))
@@ -573,8 +587,11 @@ def build_pdf_file(cosipy_yaml_input,lib_dir):
     threshold_TS=full_config["general_pipeline_config"]["ts_threshold"]
     anomaly_config =full_config["general_pipeline_config"]["anomaly_config"]
 
-    input_file_name,model_file,resolutionImage,timeBin,plotting_window,ori_file,true_b,true_l,threshold_loss,out_file=read_anomaly_detection_config(anomaly_config)
-
+    full_config2 = Configurator.open(anomaly_config)
+    input_file_name = full_config2["input_file"]
+    model_file = full_config2["model_file"]
+    resolutionImage = full_config2["resolution_angle"]
+    out_file = full_config2["file_out"]
     
     externalTrigger_start,externalTrigger_stop,flag_trigger = read_trigger_content_multiple_yaml(lib_dir,trigger_list)
     
