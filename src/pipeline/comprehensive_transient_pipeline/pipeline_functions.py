@@ -428,7 +428,7 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
 
     # punti dell'ellisse
     ang = np.linspace(0, 2*np.pi, 400)
-    xang = 20 * np.cos(ang)
+    xang = 10 * np.cos(ang)
     yang = 10 * np.sin(ang)
 
     # rotazione
@@ -708,22 +708,24 @@ def build_pdf_file(cosipy_yaml_input,lib_dir):
     img_anomaly4 = Image.open(directory_output+'imageLoss_GalCoord_rot.png')
     txt_anomaly4 = Image.new("RGBA", img_anomaly4.size)
     out_anomaly4 = Image.alpha_composite(img_anomaly4, txt_anomaly4)
-    out_anomaly4=out_anomaly4.resize(imgsize)
     draw_anomaly4 = ImageDraw.Draw(txt_anomaly4)
     draw_anomaly4.text((0, 0),'Anomaly detection loss projected',font=font_anomaly,fill=(255, 0, 0, 255))
+    out_anomaly4 = Image.alpha_composite(img_anomaly4, txt_anomaly4)
+    out_anomaly4=out_anomaly4.resize(imgsize)
     pages.append(out_anomaly4.convert("RGB"))
     
     img_anomaly5 = Image.open(directory_output+'CNNSignal.png')
     txt_anomaly5 = Image.new("RGBA", img_anomaly5.size)
     out_anomaly5 = Image.alpha_composite(img_anomaly5, txt_anomaly5)
-    out_anomaly5=out_anomaly5.resize(imgsize)
     draw_anomaly5 = ImageDraw.Draw(txt_anomaly5)
-    draw_anomaly5.text((0, 0),'CNN output',font=font_anomaly,fill=(255, 0, 0, 255))
+    draw_anomaly5.text((10, 10),'CNN output',font=font_anomaly,fill=(255, 0, 0, 255))
+    out_anomaly5 = Image.alpha_composite(img_anomaly5, txt_anomaly5)
+    out_anomaly5=out_anomaly5.resize(imgsize)
 
     pages.append(out_anomaly5.convert("RGB"))
 
     pages[0].save(
-        directory_output+'raw_ts_sequence.pdf',
+        directory_output+'maps_sequence.pdf',
         save_all=True,
         resolution=200.0,
         format="PDF",
