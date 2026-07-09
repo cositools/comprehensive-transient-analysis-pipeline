@@ -159,6 +159,9 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
     anomaly_config =full_config["general_pipeline_config"]["anomaly_config"]
     ori_file2 = full_config["general_pipeline_config"]["ori_file"]
     t_range_type=full_config["general_pipeline_config"]["t_range_type"]
+    show_true_position = full_config["general_pipeline_config"]["show_true_position"]
+    true_b =  full_config["general_pipeline_config"]["true_position_b"]
+    true_l =  full_config["general_pipeline_config"]["true_position_l"]
 
     if t_range_type=="full":
         t_scan_start_source=time_tot_start
@@ -173,8 +176,6 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
     resolutionImage = full_config2["resolution_angle"]
     plotting_window =  full_config2["plotting_window"]
     threshold_loss = full_config2["loss_threshold"]
-    true_b =  full_config2["true_position_b"]
-    true_l =  full_config2["true_position_l"]
     out_file = full_config2["file_out"]
     
     FileName=directory_output+"FileOut_test_back_full_backgr"
@@ -323,7 +324,9 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
         
     fig,ax = plt.subplots(subplot_kw = {'projection':'mollview', 'coord':'G'})
     m.plot(ax=ax,vmin=0)
-    ax.scatter(true_l, true_b, marker='*', color='red', s=50, zorder=5, transform=ax.get_transform('world'))
+    if show_true_position==True:
+        ax.scatter(true_l, true_b, marker='*', color='red', s=50, zorder=5, transform=ax.get_transform('world'))
+    
     plt.savefig(directory_output+'imageLoss_GalCoord_rot.png')
 
 def cnn_locate(cosipy_yaml_input,lib_dir):
@@ -363,7 +366,10 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     cnn_config =full_config["general_pipeline_config"]["cnn_config"]
     ori_file2 = full_config["general_pipeline_config"]["ori_file"]
     t_range_type=full_config["general_pipeline_config"]["t_range_type"]
-    
+    true_b =  full_config["general_pipeline_config"]["true_position_b"]
+    true_l =  full_config["general_pipeline_config"]["true_position_l"]
+    show_true_position = full_config["general_pipeline_config"]["show_true_position"]
+
     if t_range_type=="full":
         t_scan_start_source=time_tot_start
         t_scan_stop_source=time_tot_stop
@@ -374,8 +380,6 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     model_file = full_config2["model_file"]
     resolutionImage = full_config2["resolution_angle"]
     plotting_window =  full_config2["plotting_window"]
-    true_b =  full_config2["true_position_b"]
-    true_l =  full_config2["true_position_l"]
     stepinterval = full_config2["step_interval"]
     
     FileName=directory_output+"FileOut_test_3DCNN_"
@@ -446,7 +450,6 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
 
     fig,ax = plt.subplots(subplot_kw = {'projection':'mollview', 'coord':'G'})
     m.plot(ax=ax,vmin=0)
-    ax.scatter(true_l,true_b, marker='*',  color='red', s=50, zorder=5, transform=ax.get_transform('world'))
     
     c = SkyCoord(lon = longMax*u.deg, lat = (90 - latMax)*u.deg, frame = SpacecraftFrame(attitude = attitude) )
     coordin_new=c.transform_to('galactic')
@@ -455,15 +458,17 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     lon_ell = float(coordin_new.l.value) + xr_ang
     lat_ell = float(coordin_new.b.value) + yr_ang
 
-    ax.scatter(
-        lon_ell*u.deg,
-        lat_ell*u.deg,
-        color='red',
-        marker='o',
-        s=0.05,
-        transform=ax.get_transform('world'),
-        zorder=4
-    )
+    if show_true_position==True:
+        ax.scatter(true_l,true_b, marker='*',  color='red', s=50, zorder=5, transform=ax.get_transform('world'))
+        ax.scatter(
+            lon_ell*u.deg,
+            lat_ell*u.deg,
+            color='red',
+            marker='o',
+            s=0.05,
+            transform=ax.get_transform('world'),
+            zorder=4
+        )
 
     plt.savefig(directory_output+'CNNSignal.png')
     print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~',longMax, latMax)
@@ -500,13 +505,6 @@ def execute_threemlfit(cosipy_yaml_input,lib_dir,fitmodel,scanvar):
     
     externalTrigger_start,externalTrigger_stop,flag_trigger = read_trigger_content_multiple_yaml(lib_dir,trigger_list)
     
-    measured_l=float(0.)
-    measured_b=float(0.)
-    error_coo=float(0.)
-    maxumumTS=float(0.)
-
-    var_override1,var_override2,var_override3,var_override4,var_override5,var_override6,var_override7,var_override8,modelname = format_override_val(fitmodel,measured_l,measured_b,error_coo)
-
     array_range_start = torch.zeros(0,dtype=torch.int64)
     array_range_stop = torch.zeros(0,dtype=torch.int64)
 
@@ -530,16 +528,25 @@ def execute_threemlfit(cosipy_yaml_input,lib_dir,fitmodel,scanvar):
         print('##################################### ',str(time_stop))
 
         measured_l,measured_b,error_coo,maxumumTS=read_cosi_ts_detect(directory_output+'cosi-tsdetect_'+str(time)+'.txt')
+        var_override1,var_override2,var_override3,var_override4,var_override5,var_override6,var_override7,var_override8,modelname = format_override_val(fitmodel,measured_l,measured_b,error_coo)
+
+        img = Image.new("RGBA",size=(1000,1000),color=(255,255,255,255))
+        txt = Image.new("RGBA",size=(1000,1000),)
+        font = ImageFont.truetype("DejaVuSans.ttf", 40)
+        draw = ImageDraw.Draw(txt)
         
         args=['--config',cosipy_yaml_input, '--config_group', 'threemlfit_'+modelname,'--override',var_override1,var_override2,var_override3,var_override4,var_override5,var_override6,var_override7,var_override8,'--overwrite', '--suffix',modelname+'_'+str(time),'--output-dir',directory_output,'--tstart',str(time),'--tstop',str(time_stop)]
         if maxumumTS>float(threshold_TS):
+            # first fill with crash message...
+            draw.text((100, 400),"SPECTRAL FIT CRASHED!" ,font=font,fill=(0, 0, 0, 255))
+            draw.text((100, 500),"Time "+str(time)+' s; model= '+str(modelname),font=font,fill=(0, 0, 0, 255))
+            out = Image.alpha_composite(img, txt)
+            out.save(str(directory_output)+"raw_spectrum_"+str(modelname)+"_"+str(time)+".png")
+
+            # then in case overwrite...
             print("READY cosi_threemlfit "+modelname)
             cosi_threemlfit(argv=args)
         else:            
-            img = Image.new("RGBA",size=(1000,1000),color=(255,255,255,255))
-            txt = Image.new("RGBA",size=(1000,1000),)
-            font = ImageFont.truetype("DejaVuSans.ttf", 40)
-            draw = ImageDraw.Draw(txt)
             draw.text((100, 400),"Under threshold!" ,font=font,fill=(0, 0, 0, 255))
             draw.text((100, 500),"Time "+str(time)+' s; model= '+str(modelname),font=font,fill=(0, 0, 0, 255))
             out = Image.alpha_composite(img, txt)

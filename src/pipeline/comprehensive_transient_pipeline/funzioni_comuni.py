@@ -153,11 +153,17 @@ def format_override_val(fitmodel,measured_l,measured_b,error_coo):
     if fitmodel==1:
         modelname="band"
         stringtooverride="model:template_grb "
-
+            
     l_max= measured_l + 3.*error_coo  
     l_min= measured_l - 3.*error_coo
     b_max= measured_b + 3.*error_coo  
     b_min= measured_b - 3.*error_coo
+    if b_min<=-90:
+        b_min=-89.999
+    if b_max>=90:
+        b_max=89.999
+
+    
     var_override1 = stringtooverride+"(point source):position:l:value=" + str(measured_l)
     var_override2 = stringtooverride+"(point source):position:b:value=" + str(measured_b)
     var_override3 = stringtooverride+"(point source):position:l:free=false"

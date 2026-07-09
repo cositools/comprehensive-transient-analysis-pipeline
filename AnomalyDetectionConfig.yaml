@@ -12,10 +12,6 @@ loss_threshold:
   0.1
 orientation_file: 
   DC3_final_530km_3_month_with_slew_1sbins_GalacticEarth_SAA.ori
-true_position_b:
-   19.247158169676332 
-true_position_l: 
-   41.64606387753116
 file_out: 
   output_anomaly.txt
 step_interval:
