@@ -11,6 +11,28 @@ from typing import Any
 from matplotlib.lines import Line2D
 
 EXTERNAL_PYTHON = "/home/gamma/envs/cosipy_laura/bin/python"
+
+def basic_light_curve(cosipy_yaml_input,lib_dir):
+    import cosipy
+    import sys
+    sys.path.append(lib_dir)
+    from yayc import Configurator
+    from histpy import Histogram
+    import matplotlib.pyplot as plt
+    full_config = Configurator.open(cosipy_yaml_input)
+    directory_output =full_config["general_pipeline_config"]["directory_output"]
+    anomaly_config =full_config["general_pipeline_config"]["anomaly_config"]
+    full_config2 = Configurator.open(anomaly_config)
+    input_file_name = full_config2["input_file"]
+
+    data_full     = Histogram.open(str(input_file_name))
+    binNumTime = int(data_full.project('Time').nbins)
+    print('~~~~~~~~~~~~~~~~~~~~~~~~~~',binNumTime)
+    histo_time = data_full.project('Time')
+    fig, ax = plt.subplots()
+    histo_time.plot(ax=ax)   
+    fig.savefig(directory_output+"light_curve.png", dpi=300)
+    
 def execute_bindata_grb(cosipy_yaml_input,lib_dir):
     import cosipy
     from cosipy.pipeline.task.task import cosi_bindata
@@ -245,17 +267,18 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
 
     skymaptoplot_model = torch.t(modelMap_3D_tmp[0,:,:,0:10,int(max_loss_time-plotting_window):int(max_loss_time+plotting_window)].sum(dim=3).sum(dim=2))
     skymaptoplot_model2 = torch.t(modelMap_3D_tmp[0,:,:,0:10,int(max_loss_time+20):int(max_loss_time+30)].sum(dim=3).sum(dim=2))
-    
-    
+
+    ori = load_ori(str(ori_file2))
+    tmiddle=t_scan_start_source+max_loss_time
+    m = HealpixMap(nside = 8, coordsys=SpacecraftFrame( attitude = ori.interp_attitude(Time(tmiddle, format='unix')   )))
+
     arrTest_2 = np.zeros(data_full.project('PsiChi').nbins)
     for i in range(skymaptoplot.shape[0]):
         for ii in range(skymaptoplot.shape[1]):
-            ang1=np.deg2rad(float(ii*(180. / resolutionImage)))
-            ang2=np.deg2rad(float(i*(360. / resolutionImage)))
-            pixel_2=hp.ang2pix(8,ang1,ang2)
-            arrTest_2[pixel_2]+=skymaptoplot[i][ii]
-            
-    
+            ang1=np.deg2rad(float(ii*(180. / resolutionImage))+1e-4)
+            ang2=np.deg2rad(float(i*(360. / resolutionImage))+1e-4)
+            m[m.ang2pix(ang1, ang2)]+=skymaptoplot[i][ii]
+
     plt.figure(figsize=(16.03, 10.41) ) 
     plt.plot(frameNum,lossTensor)
     plt.title('Anomaly detection - Loss curve')
@@ -278,7 +301,6 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
     plt.title('DataMap - example; Test set')
     plt.xlabel('Bin X')
     plt.ylabel('Bin Y')
-    plt.clim(0,10)
     plt.colorbar()
     plt.savefig(directory_output+'imageData_2DPLot.png')
 
@@ -288,7 +310,6 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
     plt.title('DataMap - example backg; Test set')
     plt.xlabel('Bin X')
     plt.ylabel('Bin Y')
-    plt.clim(0,10)
     plt.colorbar()
     plt.savefig(directory_output+'imageData_2DPLot_2.png')
     
@@ -298,7 +319,6 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
     plt.title('ModelMap - example; Test set')
     plt.xlabel('Bin X')
     plt.ylabel('Bin Y')
-    plt.clim(0,10)
     plt.colorbar()
     plt.savefig(directory_output+'imageModel_2DPLot.png')
 
@@ -308,20 +328,9 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
     plt.title('ModelMap background- example; Test set')
     plt.xlabel('Bin X')
     plt.ylabel('Bin Y')
-    plt.clim(0,10)
     plt.colorbar()
     plt.savefig(directory_output+'imageModel_2DPLot_2.png')
-    
-    ori = load_ori(str(ori_file2))
-    tstart=Time(t_scan_start_source, format='unix')
-    tstop=Time(t_scan_stop_source, format='unix')
-    tmiddle=t_scan_start_source+max_loss_time
-    m = HealpixMap(nside = 8, coordsys=SpacecraftFrame( attitude = ori.interp_attitude(Time(tmiddle, format='unix')   )))
 
-    for i in range(data_full.project('PsiChi').nbins):
-        content =arrTest_2[i]
-        m[i]+=content
-        
     fig,ax = plt.subplots(subplot_kw = {'projection':'mollview', 'coord':'G'})
     m.plot(ax=ax,vmin=0)
     if show_true_position==True:
@@ -402,17 +411,19 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     
     for t in range(0,binNumTime-stepinterval,stepinterval):
         image_for_input = imagePlotX_Z_t_test[0:1,:,:,:,int(t):int(t)+stepinterval].sum(dim=4)
-        outTEST=model(image_for_input)
         lightCurveVal=image_for_input[0,0:50,0:100,0:50].sum(dim=2).sum(dim=1).sum(dim=0)
-        print(np.rad2deg(outTEST[0,0].detach().numpy()),outTEST[0,1].detach().numpy(),outTEST[0,2].detach().numpy(),lightCurveVal)
         if lightCurveVal>lightCurveMax:
             lightCurveMax=lightCurveVal
-            latMax=np.rad2deg(outTEST[0,0].detach().numpy())
-            longMax_cos=outTEST[0,1].detach().numpy()
-            longMax_sin=outTEST[0,2].detach().numpy()
-            longMax=np.rad2deg(np.atan2(longMax_sin,longMax_cos))
             tmax=t
 
+    image_for_input = imagePlotX_Z_t_test[0:1,:,:,:,int(tmax):int(tmax)+stepinterval].sum(dim=4)
+    outTEST=model(image_for_input*0.01)
+    print(np.rad2deg(outTEST[0,0].detach().numpy()),outTEST[0,1].detach().numpy(),outTEST[0,2].detach().numpy(),lightCurveVal)
+    latMax=np.rad2deg(outTEST[0,0].detach().numpy())
+    longMax_cos=outTEST[0,1].detach().numpy()
+    longMax_sin=outTEST[0,2].detach().numpy()
+    longMax=np.rad2deg(np.atan2(longMax_sin,longMax_cos))
+            
     print(tmax,latMax,longMax)
     if longMax<0:
         longMax+=360
@@ -647,6 +658,16 @@ def build_pdf_file(cosipy_yaml_input,lib_dir):
     frame_numtot=len(pngs_sorted)
     frame_numtot_external=len(externalTrigger_start)
     print(frame_numtot,frame_numtot_external)
+
+    # light_curve.png
+    img_curve = Image.open(directory_output+'light_curve.png')
+    txt_curve = Image.new("RGBA", img_curve.size)
+    imgsize_curve=img_curve.size
+    font_curve = ImageFont.truetype("DejaVuSans.ttf", 40)
+    draw_curve = ImageDraw.Draw(txt_curve)
+    draw_curve.text((20, 0),'Light curve ',font=font_curve,fill=(0, 0, 0, 255))
+    out_curve = Image.alpha_composite(img_curve, txt_curve)
+    pages.append(out_curve.convert("RGB"))
     
     imgsize=0
     frameNum=0

@@ -22,7 +22,30 @@ def build_custom(dag):
         "/home/gamma/airflow/pipeline/comprehensive-transient-analysis-pipeline.cfmodule/comprehensive_transient_pipeline/",
     )
 
-    cosipy_yaml_input_file = "/home/gamma/workspace/data/pipeline_Comprehensive_GeD_2.yaml" #_evt103.yaml"
+    cosipy_yaml_input_file = "/home/gamma/workspace/data/pipeline_Comprehensive_GeD_2.yaml"
+
+    #######################################
+    # full-sky light curve
+    def light_curve(config_path: str, lib_dir: str):
+        import os
+        import sys
+        import yaml
+        sys.path.append(lib_dir)
+
+        from pipeline_functions import basic_light_curve
+        basic_light_curve(config_path,lib_dir)
+
+    ged_light_curve = ExternalPythonOperator(
+        task_id="basic_light_curve",
+        python=EXTERNAL_PYTHON_COSIPY,
+        python_callable=light_curve,
+        op_kwargs={
+            "config_path": cosipy_yaml_input_file,
+            "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
+        },
+        dag=dag,
+    )
+
     
     #######################################
     # bin source file
@@ -119,7 +142,7 @@ def build_custom(dag):
     
     #######################################
     # Check for external triggers
-            
+         
     def check_external_task(config_path: str, lib_dir: str):
         import os
         import sys
@@ -354,7 +377,7 @@ def build_custom(dag):
     check_external_funct>>ged_ts_map_external>>fittask_externaltrigger>>join2
     ged_ts_map_scan>>fittask_scan>>join2
     transient_id_anomaly_task>>localization_cnn_task>>join2
-    join2>>build_pdf_task>>merge_spectral_fit_multiple>>build_alert_task
+    join2>>ged_light_curve>>build_pdf_task>>merge_spectral_fit_multiple>>build_alert_task
     ################################
     
 with COSIDAG(

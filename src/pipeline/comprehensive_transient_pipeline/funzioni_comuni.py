@@ -162,6 +162,10 @@ def format_override_val(fitmodel,measured_l,measured_b,error_coo):
         b_min=-89.999
     if b_max>=90:
         b_max=89.999
+    if l_min<=0:
+        l_min=0.001
+    if l_max>=360:
+        l_max=359.999
 
     
     var_override1 = stringtooverride+"(point source):position:l:value=" + str(measured_l)
