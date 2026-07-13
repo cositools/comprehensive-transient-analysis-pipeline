@@ -2,7 +2,7 @@
 The repository for the COSI comprehensive pipeline.
 
 # INSTALLATION
-Install in the same way as the comprehensive pipeline. Substitute only "fast" -> "comprehensive" whenever needed.
+Install in the same way as the fast pipeline. Substitute only "fast" -> "comprehensive" whenever needed.
 Warning: for the moment I download a specific version of cosipy from a repostory of Laura.
 
 # AFTER THE INSTALLATION IS SUCCESSFUL.
