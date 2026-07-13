@@ -417,7 +417,7 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
             tmax=t
 
     image_for_input = imagePlotX_Z_t_test[0:1,:,:,:,int(tmax):int(tmax)+stepinterval].sum(dim=4)
-    outTEST=model(image_for_input*0.01)
+    outTEST=model(image_for_input)
     print(np.rad2deg(outTEST[0,0].detach().numpy()),outTEST[0,1].detach().numpy(),outTEST[0,2].detach().numpy(),lightCurveVal)
     latMax=np.rad2deg(outTEST[0,0].detach().numpy())
     longMax_cos=outTEST[0,1].detach().numpy()
