@@ -830,7 +830,7 @@ def build_spectral_fit(cosipy_yaml_input,lib_dir,modeltoplot):
         pngs_sorted.append(directory_output+'raw_spectrum_'+modeltoplot+'_'+str(time_start)+'.png')
 
     for name in nameFiles_fit_sorted:
-        num = re.findall(r"\d+", name)[0]
+        num = re.findall(r"\d+", name)[-2]
         timeFiles.append(num)
   
     frame_numtot=len(pngs_sorted)
