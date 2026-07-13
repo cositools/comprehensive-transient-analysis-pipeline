@@ -23,7 +23,7 @@ def build_custom(dag):
     )
 
     cosipy_yaml_input_file = "/home/gamma/workspace/data/pipeline_Comprehensive_GeD_2.yaml"
-
+    
     #######################################
     # full-sky light curve
     def light_curve(config_path: str, lib_dir: str):
@@ -366,6 +366,31 @@ def build_custom(dag):
         },
         dag=dag,
     )
+    
+    
+    #######################################
+    #  save transient fits files
+    def transient_fits_save(config_path: str, lib_dir: str):
+        import os
+        import sys
+        import yaml
+        sys.path.append(lib_dir)
+
+        from pipeline_functions import create_output_files_transient
+        create_output_files_transient(config_path,lib_dir)
+
+    save_fits = ExternalPythonOperator(
+        task_id="save_transient_fits",
+        python=EXTERNAL_PYTHON_COSIPY,
+        python_callable=transient_fits_save,
+        op_kwargs={
+            "config_path": cosipy_yaml_input_file,
+            "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
+        },
+        dag=dag,
+    )
+    
+    
     #######################################
     
     join = EmptyOperator(task_id="join")
@@ -377,8 +402,9 @@ def build_custom(dag):
     check_external_funct>>ged_ts_map_external>>fittask_externaltrigger>>join2
     ged_ts_map_scan>>fittask_scan>>join2
     transient_id_anomaly_task>>localization_cnn_task>>join2
-    join2>>ged_light_curve>>build_pdf_task>>merge_spectral_fit_multiple>>build_alert_task
+    join2>>ged_light_curve>>build_pdf_task>>merge_spectral_fit_multiple>>save_fits>>build_alert_task
     ################################
+    
     
 with COSIDAG(
     dag_id="Comprehensive_GeD_v6",

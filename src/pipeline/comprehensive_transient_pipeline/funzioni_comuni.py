@@ -365,3 +365,34 @@ def read_time_frame():
         time2=int(line2[1])
     file_time_frame.close()
     return time1,time2
+
+def select_data_transient(configfilename,lib_dir,t1,t2,datadir,scan_var):
+    import sys
+    sys.path.append(lib_dir)
+    import torch
+    from yayc import Configurator
+    from astropy.io import fits
+    from cosipy.pipeline.src.preprocessing import write_yaml
+    from cosipy import UnBinnedData
+    import subprocess
+    
+    time_start_new=t1
+    time_stop_new=t2
+    full_config = Configurator.open(configfilename)
+    unbinned_file=full_config["bindata_soubk"]["unbinned_data_file"]
+    ori_file=full_config["bindata_soubk"]["sc_file"]
+    resp_path=full_config["bindata_soubk"]["response"]["args"]
+    dt=full_config["bindata_soubk"]["dt"]
+    outdir=full_config["general_pipeline_config"]["directory_output"]
+
+    out_tmp = outdir
+    if scan_var==1:
+        out_tmp=outdir+'timescan/'
+    
+    yaml_path        = out_tmp+'file_select_transient_'+str(time_start_new)+'.yaml'
+    output_file_fits = out_tmp+'selected_event_'+str(time_start_new)
+    write_yaml(datadir+unbinned_file,datadir+ori_file,datadir+resp_path[0], dt,float(time_start_new),float(time_stop_new),yaml_path)
+    
+    tseldata=UnBinnedData(yaml_path)
+    tseldata.select_data_time(unbinned_data=datadir+unbinned_file,output_name=output_file_fits)
+    subprocess.run("gunzip -f "+output_file_fits+".fits.gz", shell=True)

@@ -631,7 +631,7 @@ def build_pdf_file(cosipy_yaml_input,lib_dir):
     )
     
     for name in nameFiles_TS_sorted:
-        num = re.findall(r"\d+", name)[0]
+        num = re.findall(r"\d+", name)[-1]
         measured_l_tmp,measured_b_tmp,error_coo_tmp,maxumumTS_tmp=read_cosi_ts_detect(name)
         maxumumTS_all.append(maxumumTS_tmp)
         timeFiles.append(num)
@@ -892,6 +892,65 @@ def build_spectral_fit(cosipy_yaml_input,lib_dir,modeltoplot):
         append_images=pages[1:])
 
 
+def create_output_files_transient(cosipy_yaml_input,lib_dir):
+    import sys
+    import os
+    import re
+    import json
+    from astropy.time import Time
+    from astropy.coordinates import SkyCoord
+    import astropy.units as u
+
+    sys.path.append(lib_dir)
+    from funzioni_comuni import read_cosi_ts_detect,read_base_pipeline_params,read_trigger_content_multiple_yaml,select_data_transient
+    from yayc import Configurator
+    full_config = Configurator.open(cosipy_yaml_input)
+    t_scan_start_source=full_config["general_pipeline_config"]["t_scan_start_source"]
+    t_scan_stop_source=full_config["general_pipeline_config"]["t_scan_stop_source"]
+    t_scan_delta=full_config["general_pipeline_config"]["t_scan_delta"]
+    directory_output =full_config["general_pipeline_config"]["directory_output"]
+    trigger_list=full_config["general_pipeline_config"]["external_trigger_list"]
+    threshold_TS=full_config["general_pipeline_config"]["ts_threshold"]
+    
+    externalTrigger_start,externalTrigger_stop,flag_trigger = read_trigger_content_multiple_yaml(lib_dir,trigger_list)
+    nameFiles_TS = []
+    trigger_TS = []
+    trigger_l = []
+    trigger_b = []
+
+    for f in os.listdir(directory_output+'timescan/'):
+        if f.lower().endswith(".txt"):
+            fileName=directory_output+'timescan/'+ f
+            nameFiles_TS.append(fileName)
+            print(f)
+
+    nameFiles_TS_sorted = sorted(
+        nameFiles_TS,
+        key=lambda f: int(re.findall(r'\d+', f)[-1])
+    )
+
+    triggertype="NONE"
+    first_time=1e20
+    first_latitude=0
+    first_longitude=0
+
+    for i in range(len(externalTrigger_start)):
+        time_start=str(int(externalTrigger_start[i]))
+        time_stop=str(int(externalTrigger_stop[i]))
+        
+        measured_l,measured_b,error_coo,maxumumTS=read_cosi_ts_detect(directory_output+'cosi-tsdetect_'+time_start+'.txt')
+        if maxumumTS>float(threshold_TS):
+            select_data_transient(cosipy_yaml_input,lib_dir,time_start,time_stop,'/home/gamma/workspace/data/',0)
+    
+    time_frame=0
+    for file in nameFiles_TS_sorted:
+        measured_l_tmp,measured_b_tmp,error_coo_tmp,maxumumTS_tmp=read_cosi_ts_detect(file)
+        timestart=t_scan_start_source + (time_frame*t_scan_delta)
+        timestop= timestart + t_scan_delta
+        if maxumumTS_tmp>float(threshold_TS):
+            select_data_transient(cosipy_yaml_input,lib_dir,timestart,timestop,'/home/gamma/workspace/data/',1)
+        time_frame+=1
+            
 def prepare_alert_external(cosipy_yaml_input,lib_dir):
     import sys
     import os
