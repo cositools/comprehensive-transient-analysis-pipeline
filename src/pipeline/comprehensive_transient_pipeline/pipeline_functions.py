@@ -390,7 +390,8 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     resolutionImage = full_config2["resolution_angle"]
     plotting_window =  full_config2["plotting_window"]
     stepinterval = full_config2["step_interval"]
-    
+    out_file = full_config2["file_out"]
+
     FileName=directory_output+"FileOut_test_3DCNN_"
     numberEventstest=1
     t0_test=0
@@ -409,15 +410,19 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     longMax=0
     tmax=0
     
-    for t in range(0,binNumTime-stepinterval,stepinterval):
-        image_for_input = imagePlotX_Z_t_test[0:1,:,:,:,int(t):int(t)+stepinterval].sum(dim=4)
+    for t in range(int(stepinterval),int(binNumTime)-int(stepinterval),int(stepinterval)):
+        image_for_input = imagePlotX_Z_t_test[0:1,:,:,:,int(t)-int(stepinterval):int(t)+int(stepinterval)].sum(dim=4)
         lightCurveVal=image_for_input[0,0:50,0:100,0:50].sum(dim=2).sum(dim=1).sum(dim=0)
         if lightCurveVal>lightCurveMax:
             lightCurveMax=lightCurveVal
             tmax=t
 
-    image_for_input = imagePlotX_Z_t_test[0:1,:,:,:,int(tmax):int(tmax)+stepinterval].sum(dim=4)
-    outTEST=model(image_for_input)
+    rescalingFactor=1.
+    if lightCurveMax>2000:
+        rescalingFactor=lightCurveMax/1000. # Temporary solution for the extremely bright events. The training is done on events with peak < 2000 cts
+            
+    image_for_input = imagePlotX_Z_t_test[0:1,:,:,:,int(tmax)-int(stepinterval):int(tmax)+int(stepinterval)].sum(dim=4)
+    outTEST=model(image_for_input/rescalingFactor)
     print(np.rad2deg(outTEST[0,0].detach().numpy()),outTEST[0,1].detach().numpy(),outTEST[0,2].detach().numpy(),lightCurveVal)
     latMax=np.rad2deg(outTEST[0,0].detach().numpy())
     longMax_cos=outTEST[0,1].detach().numpy()
@@ -430,7 +435,7 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     
     print(tmax,latMax,longMax)
 
-    skymaptoplot = imagePlotX_Z_t_test[0,:,:,0:10,tmax:tmax+stepinterval].sum(dim=3).sum(dim=2)
+    skymaptoplot = imagePlotX_Z_t_test[0,:,:,0:10,int(tmax)-int(stepinterval):int(tmax)+int(stepinterval)].sum(dim=3).sum(dim=2)
     
     #####################################
     ori = load_ori(str(ori_file2))
@@ -464,26 +469,31 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     
     c = SkyCoord(lon = longMax*u.deg, lat = (90 - latMax)*u.deg, frame = SpacecraftFrame(attitude = attitude) )
     coordin_new=c.transform_to('galactic')
-    ax.scatter(coordin_new.l,coordin_new.b, marker='o', color='red', s=10, zorder=5 ,transform=ax.get_transform('world'))
+    ax.scatter(coordin_new.l.value*u.deg,coordin_new.b.value*u.deg, marker='o', color='red', s=10, zorder=5 ,transform=ax.get_transform('world'))
 
     lon_ell = float(coordin_new.l.value) + xr_ang
     lat_ell = float(coordin_new.b.value) + yr_ang
 
     if show_true_position==True:
         ax.scatter(true_l,true_b, marker='*',  color='red', s=50, zorder=5, transform=ax.get_transform('world'))
-        ax.scatter(
-            lon_ell*u.deg,
-            lat_ell*u.deg,
-            color='red',
-            marker='o',
-            s=0.05,
-            transform=ax.get_transform('world'),
-            zorder=4
-        )
 
+    ax.scatter(
+        lon_ell*u.deg,
+        lat_ell*u.deg,
+        color='red',
+        marker='o',
+        s=0.05,
+        transform=ax.get_transform('world'),
+        zorder=4
+    )
+    
     plt.savefig(directory_output+'CNNSignal.png')
     print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~',longMax, latMax)
 
+    file_CNN_save = open(directory_output+out_file,'w')
+    print('l= ',coordin_new.l.value*u.deg,' b= ',coordin_new.b.value*u.deg,file=file_CNN_save)
+    print('tmax= ',int(t_scan_start_source)+int(tmax),' max= ', float(lightCurveMax),file=file_CNN_save)
+    file_CNN_save.close()
     
 def execute_threemlfit(cosipy_yaml_input,lib_dir,fitmodel,scanvar):
     import cosipy

@@ -13,4 +13,4 @@ orientation_file:
 file_out: 
   output_cnn.txt
 step_interval:
-  20
+  10
