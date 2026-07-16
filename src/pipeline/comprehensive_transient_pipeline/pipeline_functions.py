@@ -972,7 +972,10 @@ def create_output_files_transient(cosipy_yaml_input,lib_dir):
     directory_output =full_config["general_pipeline_config"]["directory_output"]
     trigger_list=full_config["general_pipeline_config"]["external_trigger_list"]
     threshold_TS=full_config["general_pipeline_config"]["ts_threshold"]
-    
+    anomaly_config =full_config["general_pipeline_config"]["anomaly_config"]
+    full_config2 = Configurator.open(anomaly_config)
+    threshold_loss = full_config2["loss_threshold"]
+
     externalTrigger_start,externalTrigger_stop,flag_trigger = read_trigger_content_multiple_yaml(lib_dir,trigger_list)
     ## Anomaly detection trigger
     AD_tstart,AD_tmax,AD_tstop,AD_maximumloss=read_cosi_AD_detect(directory_output+'output_anomaly.txt')
@@ -1017,7 +1020,7 @@ def create_output_files_transient(cosipy_yaml_input,lib_dir):
         time_frame+=1
 
     #save Anomaly detection + CNN output
-    if AD_maximumloss>0.1:
+    if AD_maximumloss>float(threshold_loss):
         select_data_transient(cosipy_yaml_input,lib_dir,AD_tstart,AD_tstop,'/home/gamma/workspace/data/',0,1)
         
 def prepare_alert_external(cosipy_yaml_input,lib_dir):
@@ -1039,6 +1042,9 @@ def prepare_alert_external(cosipy_yaml_input,lib_dir):
     directory_output =full_config["general_pipeline_config"]["directory_output"]
     trigger_list=full_config["general_pipeline_config"]["external_trigger_list"]
     threshold_TS=full_config["general_pipeline_config"]["ts_threshold"]
+    anomaly_config =full_config["general_pipeline_config"]["anomaly_config"]
+    full_config2 = Configurator.open(anomaly_config)
+    threshold_loss = full_config2["loss_threshold"]
 
     externalTrigger_start,externalTrigger_stop,flag_trigger = read_trigger_content_multiple_yaml(lib_dir,trigger_list)
     
@@ -1133,7 +1139,7 @@ def prepare_alert_external(cosipy_yaml_input,lib_dir):
         print('',file=f)
         print('#############################',file=f)
         print('Alert from Anomaly detection + CNN ',file=f)
-        if AD_maximumloss>0.1:
+        if AD_maximumloss>float(threshold_loss):
             print('timeStart ',AD_tstart,file=f)
             print('timeStop ',AD_tstop,file=f)
             print('Galactic_long ', CNN_measured_l,file=f)
