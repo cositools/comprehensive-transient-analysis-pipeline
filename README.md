@@ -65,6 +65,9 @@ How to test this first version:
 	In standard operations the pipeline will do a scan on the entire file, now we want to test quickly.
         Still, if you wish you can run the transient search on the full data set.
 	We also have a set of fake external triggers (that are obviously specific for each event).
+	Copy the files in the appropriate place and don't forget to change
+        cosipy_yaml_input_file = "/home/gamma/workspace/data/pipeline_Comprehensive_GeD_2*.yaml"
+	in the main PipelineComprehensive*py
 
 4) Put:
 	pipeline_Comprehensive_GeD_2.yaml
@@ -74,7 +77,7 @@ How to test this first version:
 
 5) And run through the interface of cosiflow. For any problem/comment feedback is appreciated.
 
-What the test files are:
+*) What the test files are:
 	evt 100: GRB_bn090424592 from DC4
 
 	I put this file in three versions:
