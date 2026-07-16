@@ -79,7 +79,7 @@ How to test this first version:
 
 *) What the test files are:
 
-	evt 100: GRB_bn090424592 from DC4
+-evt 100: GRB_bn090424592 from DC4
 
 	I put this file in three versions:
 
@@ -88,3 +88,7 @@ How to test this first version:
 	*downsampled0.1 (1 photon out of 10)
 
 	*downsampled0.01 (1 photon out of 100)
+
+-bn110605183 from DC4
+
+-evt 3: is bn110605183 with a shift in time, position and some rescaled luminosity.
