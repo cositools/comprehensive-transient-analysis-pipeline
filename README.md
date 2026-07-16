@@ -44,20 +44,27 @@ How to test this first version:
 
 	-This yes...
 
-	-ListOfTriggers.txt
+	-examplesForTest/ListOfTriggers.txt
 
-	-externalTriggerInfos1.yaml
+	-examplesForTest/externalTriggerInfos1.yaml
 
-	-externalTriggerInfos2.yaml
+	-examplesForTest/externalTriggerInfos2.yaml
 
-	-externalTriggerInfos3.yaml
+	-examplesForTest/externalTriggerInfos3.yaml
 
-	-AnomalyDetectionConfig.yaml
+	-examplesForTest/AnomalyDetectionConfig.yaml
 
-	-CNNLocalizationConfig.yaml
+	-examplesForTest/CNNLocalizationConfig.yaml
 
 	under
 	../cosiflow/data/obs/2025_01/250101/auxil/
+
+        I provided several examples for testing purposes.
+	Check in the bottom what such events are...
+	Every file has its own configuration since the time frames are very different.
+	In standard operations the pipeline will do a scan on the entire file, now we want to test quickly.
+        Still, if you wish you can run the transient search on the full data set.
+	We also have a set of fake external triggers (that are obviously specific for each event).
 
 4) Put:
 	pipeline_Comprehensive_GeD_2.yaml
@@ -67,3 +74,9 @@ How to test this first version:
 
 5) And run through the interface of cosiflow. For any problem/comment feedback is appreciated.
 
+What the test files are:
+	evt 100: GRB_bn090424592 from DC4
+	I put this file in three versions:
+	*full data
+	*downsampled0.1 (1 photon out of 10)
+	*downsampled0.01 (1 photon out of 100)
