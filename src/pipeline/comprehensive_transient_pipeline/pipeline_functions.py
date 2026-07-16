@@ -1228,8 +1228,17 @@ def cleanup_and_format(cosipy_yaml_input,lib_dir):
     subprocess.run('mv '+directory_output+'*pdf '+directory_output+'../garbagebin', shell=True)
     subprocess.run('mv '+directory_output+'results*h5 '+directory_output+'../garbagebin', shell=True)
     subprocess.run('mv '+directory_output+'Pseudo_alert.txt '+directory_output+'../garbagebin', shell=True)
+    subprocess.run('mv '+directory_output+'FileOut* '+directory_output+'../garbagebin', shell=True)
+    subprocess.run('mv '+directory_output+'file_select_transient*yaml '+directory_output+'../garbagebin', shell=True)
+    subprocess.run('mv '+directory_output+'selected*fits '+directory_output+'../garbagebin', shell=True)
+    subprocess.run('mv '+directory_output+'Pseudo* '+directory_output+'../garbagebin', shell=True)
+    subprocess.run('mv '+directory_output+'XXX* '+directory_output+'../garbagebin', shell=True)
 
     fileName_toClean = directory_output+"cosi-tsdetect_*.txt"
+    subprocess.run('mv ' + fileName_toClean + ' '+directory_output+'../garbagebin',shell=True)
+    fileName_toClean = directory_output+"output_anomaly.txt"
+    subprocess.run('mv ' + fileName_toClean + ' '+directory_output+'../garbagebin',shell=True)
+    fileName_toClean = directory_output+"output_cnn.txt"
     subprocess.run('mv ' + fileName_toClean + ' '+directory_output+'../garbagebin',shell=True)
 
     # since I cannot include the python_callable in the branch I need a tmp file with the list of external triggers

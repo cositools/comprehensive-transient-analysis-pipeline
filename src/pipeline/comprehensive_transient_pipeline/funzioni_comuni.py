@@ -43,7 +43,7 @@ def read_cosi_AD_detect(inputfile):
 
     tstart=0
     tstop=0
-    maxumumloss=0
+    maximumloss=0
     tmax=0
     
     for line_file in content_file:
