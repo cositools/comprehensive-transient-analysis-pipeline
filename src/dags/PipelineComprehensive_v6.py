@@ -168,11 +168,11 @@ def build_custom(dag):
     
     #######################################
     # Spectral fit 
-    def execute_spectral_fit(config_path: str, lib_dir: str,model_fit: int, scan_flag: int):
+    def execute_spectral_fit(config_path: str, lib_dir: str,model_fit: int, scan_flag: int, flag_CNN_in: int):
         import sys
         sys.path.append(lib_dir)
         from pipeline_functions import execute_threemlfit
-        execute_threemlfit(config_path,lib_dir,model_fit,scan_flag)
+        execute_threemlfit(config_path,lib_dir,model_fit,scan_flag,flag_CNN_in)
     
     fittask_externaltrigger = []
     for i in range(2):
@@ -191,10 +191,35 @@ def build_custom(dag):
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
             "model_fit": i,
             "scan_flag": 0,
+            "flag_CNN_in": 0,
         },
 
         )
         fittask_externaltrigger.append(t)
+        
+    
+    fittask_CNN = []
+    for i in range(2):
+        modelname=""
+        if i==0:
+            modelname="fit_spectrum_pw_CNN"
+        if i==1:
+            modelname="fit_spectrum_band_CNN"
+
+        t = ExternalPythonOperator(
+        task_id=modelname,
+        python=EXTERNAL_PYTHON_COSIPY,  # Specifica l'interprete dell'ambiente cosipy
+        python_callable=execute_spectral_fit,
+        op_kwargs={
+            "config_path": cosipy_yaml_input_file,
+            "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
+            "model_fit": i,
+            "scan_flag": 0,
+            "flag_CNN_in": 1,
+        },
+
+        )
+        fittask_CNN.append(t)
     
     fittask_scan = []
     for i in range(2):
@@ -213,6 +238,7 @@ def build_custom(dag):
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
             "model_fit": i,
             "scan_flag": 1,
+            "flag_CNN_in": 0,
         },
 
         )
@@ -367,7 +393,6 @@ def build_custom(dag):
         dag=dag,
     )
     
-    
     #######################################
     #  save transient fits files
     def transient_fits_save(config_path: str, lib_dir: str):
@@ -401,10 +426,9 @@ def build_custom(dag):
     join>>[ged_ts_map_scan,transient_id_anomaly_task,check_external_funct]
     check_external_funct>>ged_ts_map_external>>fittask_externaltrigger>>join2
     ged_ts_map_scan>>fittask_scan>>join2
-    transient_id_anomaly_task>>localization_cnn_task>>join2
+    transient_id_anomaly_task>>localization_cnn_task>>fittask_CNN>>join2
     join2>>ged_light_curve>>build_pdf_task>>merge_spectral_fit_multiple>>save_fits>>build_alert_task
     ################################
-    
     
 with COSIDAG(
     dag_id="Comprehensive_GeD_v6",

@@ -18,6 +18,45 @@ def read_cosi_ts_detect(inputfile):
             maxumumTS=float(line_object[2])
     return measured_l,measured_b,error_coo,maxumumTS
 
+def read_cosi_CNN_detect(inputfile):
+    f_file = open(inputfile)
+    content_file = f_file.read().splitlines()
+
+    measured_l=0
+    measured_b=0
+    maxumumCTS=0
+    tmax=0
+    for line_file in content_file:
+        line_object=line_file.split()
+        if line_object[0]=="l=" and line_object[3]=="b=":
+            measured_l = float(line_object[1])
+            measured_b = float(line_object[4])
+        if line_object[0]=="tmax=":
+            tmax=int(line_object[1])
+            maxumumCTS=float(line_object[3])
+            
+    return measured_l,measured_b,maxumumCTS,tmax
+
+def read_cosi_AD_detect(inputfile):
+    f_file = open(inputfile)
+    content_file = f_file.read().splitlines()
+
+    tstart=0
+    tstop=0
+    maxumumloss=0
+    tmax=0
+    
+    for line_file in content_file:
+        line_object=line_file.split()
+        if line_object[0]=="t_start," and line_object[1]=="t_max,":
+            tstart = int(line_object[3])
+            tmax = int(line_object[4])
+            tstop = int(line_object[5])
+        if line_object[0]=="max_loss":
+            maximumloss=float(line_object[1])
+            
+    return tstart,tmax,tstop,maximumloss
+
 
 def read_base_pipeline_params(namefile):
     t_scan_start_back=0
@@ -366,7 +405,7 @@ def read_time_frame():
     file_time_frame.close()
     return time1,time2
 
-def select_data_transient(configfilename,lib_dir,t1,t2,datadir,scan_var):
+def select_data_transient(configfilename,lib_dir,t1,t2,datadir,scan_var,cnn_use):
     import sys
     sys.path.append(lib_dir)
     import torch
@@ -388,9 +427,13 @@ def select_data_transient(configfilename,lib_dir,t1,t2,datadir,scan_var):
     out_tmp = outdir
     if scan_var==1:
         out_tmp=outdir+'timescan/'
+
+    CNN_var="_"
+    if cnn_use==1:
+       CNN_var+="CNN_" 
     
     yaml_path        = out_tmp+'file_select_transient_'+str(time_start_new)+'.yaml'
-    output_file_fits = out_tmp+'selected_event_'+str(time_start_new)
+    output_file_fits = out_tmp+'selected_event'+CNN_var+str(time_start_new)
     write_yaml(datadir+unbinned_file,datadir+ori_file,datadir+resp_path[0], dt,float(time_start_new),float(time_stop_new),yaml_path)
     
     tseldata=UnBinnedData(yaml_path)

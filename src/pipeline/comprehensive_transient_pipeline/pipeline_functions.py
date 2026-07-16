@@ -488,19 +488,18 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     )
     
     plt.savefig(directory_output+'CNNSignal.png')
-    print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~',longMax, latMax)
 
     file_CNN_save = open(directory_output+out_file,'w')
     print('l= ',coordin_new.l.value*u.deg,' b= ',coordin_new.b.value*u.deg,file=file_CNN_save)
     print('tmax= ',int(t_scan_start_source)+int(tmax),' max= ', float(lightCurveMax),file=file_CNN_save)
     file_CNN_save.close()
     
-def execute_threemlfit(cosipy_yaml_input,lib_dir,fitmodel,scanvar):
+def execute_threemlfit(cosipy_yaml_input,lib_dir,fitmodel,scanvar,CNNinput):
     import cosipy
     from cosipy.pipeline.task.task import cosi_threemlfit
     import sys
     sys.path.append(lib_dir)
-    from funzioni_comuni import read_cosi_ts_detect,read_base_pipeline_params,format_override_val,read_trigger_content_multiple_yaml,read_time_frame
+    from funzioni_comuni import read_cosi_ts_detect,read_base_pipeline_params,format_override_val,read_trigger_content_multiple_yaml,read_time_frame,read_cosi_CNN_detect,read_cosi_AD_detect
     from PIL import Image, ImageDraw, ImageFont
     from threeML import JointLikelihood,DataList,XYLike,Model,PointSource,Constant
     import numpy as np
@@ -529,69 +528,95 @@ def execute_threemlfit(cosipy_yaml_input,lib_dir,fitmodel,scanvar):
     array_range_start = torch.zeros(0,dtype=torch.int64)
     array_range_stop = torch.zeros(0,dtype=torch.int64)
 
-    if scanvar==1:
-        directory_output+="timescan/"
-        for time in range(t_scan_start_source,t_scan_stop_source,t_scan_delta):
-            array_range_start = torch.cat([array_range_start,torch.tensor([time])])
-            time_stop = time + t_scan_delta
-            array_range_stop = torch.cat([array_range_stop,torch.tensor([time_stop])])
-    else:
-        for n_t in range(externalTrigger_start.size(0)):
-            t_init=externalTrigger_start[n_t]
-            t_stop=externalTrigger_stop[n_t]
-            array_range_start=torch.cat([array_range_start,torch.tensor([t_init])])
-            array_range_stop=torch.cat([array_range_stop,torch.tensor([t_stop])])
-    
-    for n_t in range(array_range_start.shape[0]):
-        time      =int(array_range_start[n_t])
-        time_stop =int(array_range_stop[n_t])
-        print('##################################### ',str(time))
-        print('##################################### ',str(time_stop))
-
-        measured_l,measured_b,error_coo,maxumumTS=read_cosi_ts_detect(directory_output+'cosi-tsdetect_'+str(time)+'.txt')
-        var_override1,var_override2,var_override3,var_override4,var_override5,var_override6,var_override7,var_override8,modelname = format_override_val(fitmodel,measured_l,measured_b,error_coo)
-
+    if CNNinput==1:
+        measured_CNN_l,measured_CNN_b,maxumumCTS_CNN,tmax_CNN=read_cosi_CNN_detect(directory_output+'output_cnn.txt')
+        t_loss_start,t_loss_max,t_loss_stop,loss_max=read_cosi_AD_detect(directory_output+'output_anomaly.txt')
+        var_override1,var_override2,var_override3,var_override4,var_override5,var_override6,var_override7,var_override8,modelname = format_override_val(fitmodel,measured_CNN_l,measured_CNN_b,10.)
+        
         img = Image.new("RGBA",size=(1000,1000),color=(255,255,255,255))
         txt = Image.new("RGBA",size=(1000,1000),)
         font = ImageFont.truetype("DejaVuSans.ttf", 40)
         draw = ImageDraw.Draw(txt)
-        
-        args=['--config',cosipy_yaml_input, '--config_group', 'threemlfit_'+modelname,'--override',var_override1,var_override2,var_override3,var_override4,var_override5,var_override6,var_override7,var_override8,'--overwrite', '--suffix',modelname+'_'+str(time),'--output-dir',directory_output,'--tstart',str(time),'--tstop',str(time_stop)]
-        if maxumumTS>float(threshold_TS):
-            # first fill with crash message...
-            draw.text((100, 400),"SPECTRAL FIT CRASHED!" ,font=font,fill=(0, 0, 0, 255))
-            draw.text((100, 500),"Time "+str(time)+' s; model= '+str(modelname),font=font,fill=(0, 0, 0, 255))
-            out = Image.alpha_composite(img, txt)
-            out.save(str(directory_output)+"raw_spectrum_"+str(modelname)+"_"+str(time)+".png")
+                
+        args=['--config',cosipy_yaml_input, '--config_group', 'threemlfit_'+modelname,'--override',var_override1,var_override2,var_override3,var_override4,var_override5,var_override6,var_override7,var_override8,'--overwrite', '--suffix','CNN_'+modelname+'_'+str(t_loss_start),'--output-dir',directory_output,'--tstart',str(t_loss_start),'--tstop',str(t_loss_stop)]
+        #if maxumumTS>float(threshold_TS):
 
-            # then in case overwrite...
-            print("READY cosi_threemlfit "+modelname)
-            cosi_threemlfit(argv=args)
-        else:            
-            draw.text((100, 400),"Under threshold!" ,font=font,fill=(0, 0, 0, 255))
-            draw.text((100, 500),"Time "+str(time)+' s; model= '+str(modelname),font=font,fill=(0, 0, 0, 255))
-            out = Image.alpha_composite(img, txt)
-            out.save(str(directory_output)+"raw_spectrum_"+str(modelname)+"_"+str(time)+".png")
+        # first fill with crash message...
+        draw.text((100, 400),"SPECTRAL FIT CRASHED!" ,font=font,fill=(0, 0, 0, 255))
+        draw.text((100, 500),"Time "+str(t_loss_start)+' s; model= '+str(modelname)+' CNN',font=font,fill=(0, 0, 0, 255))
+        out = Image.alpha_composite(img, txt)
+        out.save(str(directory_output)+"raw_spectrum_CNN_"+str(modelname)+"_"+str(t_loss_start)+".png")
+
+        # then in case overwrite...
+        print("READY cosi_threemlfit "+modelname)
+        cosi_threemlfit(argv=args)
+
+    else:
+        if scanvar==1:
+            directory_output+="timescan/"
+            for time in range(t_scan_start_source,t_scan_stop_source,t_scan_delta):
+                array_range_start = torch.cat([array_range_start,torch.tensor([time])])
+                time_stop = time + t_scan_delta
+                array_range_stop = torch.cat([array_range_stop,torch.tensor([time_stop])])    
+        else:
+            for n_t in range(externalTrigger_start.size(0)):
+                t_init=externalTrigger_start[n_t]
+                t_stop=externalTrigger_stop[n_t]
+                array_range_start=torch.cat([array_range_start,torch.tensor([t_init])])
+                array_range_stop=torch.cat([array_range_stop,torch.tensor([t_stop])])
             
-            ###################
-            x = np.array([1.0])
-            y = np.array([0.0])
-            yerr = np.array([1.0])
-            plugin = XYLike("single_point", x, y, yerr)
-            plugins = DataList(plugin)
-            model = Model(
-                PointSource(
-                    "src",
-                    0, 0,
-                    spectral_shape=Constant()
+        for n_t in range(array_range_start.shape[0]):
+            time      =int(array_range_start[n_t])
+            time_stop =int(array_range_stop[n_t])
+            print('##################################### ',str(time))
+            print('##################################### ',str(time_stop))
+                
+            measured_l,measured_b,error_coo,maxumumTS=read_cosi_ts_detect(directory_output+'cosi-tsdetect_'+str(time)+'.txt')
+                
+            var_override1,var_override2,var_override3,var_override4,var_override5,var_override6,var_override7,var_override8,modelname = format_override_val(fitmodel,measured_l,measured_b,error_coo)
+
+                
+            img = Image.new("RGBA",size=(1000,1000),color=(255,255,255,255))
+            txt = Image.new("RGBA",size=(1000,1000),)
+            font = ImageFont.truetype("DejaVuSans.ttf", 40)
+            draw = ImageDraw.Draw(txt)
+                
+            args=['--config',cosipy_yaml_input, '--config_group', 'threemlfit_'+modelname,'--override',var_override1,var_override2,var_override3,var_override4,var_override5,var_override6,var_override7,var_override8,'--overwrite', '--suffix','TSMap_'+modelname+'_'+str(time),'--output-dir',directory_output,'--tstart',str(time),'--tstop',str(time_stop)]
+            if maxumumTS>float(threshold_TS):
+                # first fill with crash message...
+                draw.text((100, 400),"SPECTRAL FIT CRASHED!" ,font=font,fill=(0, 0, 0, 255))
+                draw.text((100, 500),"Time "+str(time)+' s; model= '+str(modelname),font=font,fill=(0, 0, 0, 255))
+                out = Image.alpha_composite(img, txt)
+                out.save(str(directory_output)+"raw_spectrum_TSMap_"+str(modelname)+"_"+str(time)+".png")
+
+                # then in case overwrite...
+                print("READY cosi_threemlfit "+modelname)
+                cosi_threemlfit(argv=args)
+            else:            
+                draw.text((100, 400),"Under threshold!" ,font=font,fill=(0, 0, 0, 255))
+                draw.text((100, 500),"Time "+str(time)+' s; model= '+str(modelname),font=font,fill=(0, 0, 0, 255))
+                out = Image.alpha_composite(img, txt)
+                out.save(str(directory_output)+"raw_spectrum_TSMap_"+str(modelname)+"_"+str(time)+".png")
+                
+                ###################
+                x = np.array([1.0])
+                y = np.array([0.0])
+                yerr = np.array([1.0])
+                plugin = XYLike("single_point", x, y, yerr)
+                plugins = DataList(plugin)
+                model = Model(
+                    PointSource(
+                        "src",
+                        0, 0,
+                        spectral_shape=Constant()
+                    )
                 )
-            )
-            model.src.spectrum.main.value = 0.0
-            
-            like = JointLikelihood(model, plugins, verbose=False)
-            like.fit()
-            results=like.results
-            results.write_to(str(directory_output)+"results_"+str(modelname)+"_"+str(time)+".h5",as_hdf=True)
+                model.src.spectrum.main.value = 0.0
+                    
+                like = JointLikelihood(model, plugins, verbose=False)
+                like.fit()
+                results=like.results
+                results.write_to(str(directory_output)+"results_TSMap_"+str(modelname)+"_"+str(time)+".h5",as_hdf=True)
 
 
 def build_pdf_file(cosipy_yaml_input,lib_dir):
@@ -796,7 +821,7 @@ def build_spectral_fit(cosipy_yaml_input,lib_dir,modeltoplot):
     
     nameFiles_fit = []
     for f in os.listdir(directory_output+'timescan/'):
-        if f.lower().endswith(".h5") and str(modeltoplot) in f:
+        if f.lower().endswith(".h5") and 'TSMap_'+str(modeltoplot) in f:
             fileName=directory_output+'timescan/'+ f
             nameFiles_fit.append(fileName)
             print(f)
@@ -808,7 +833,7 @@ def build_spectral_fit(cosipy_yaml_input,lib_dir,modeltoplot):
         
     nameFiles_fit_external = []
     for f in os.listdir(directory_output):
-        if f.lower().endswith(".h5") and str(modeltoplot) in f:
+        if f.lower().endswith(".h5") and 'results_TSMap_'+str(modeltoplot) in f:
             fileName=directory_output+ f
             nameFiles_fit_external.append(fileName)
             print(f)
@@ -826,7 +851,7 @@ def build_spectral_fit(cosipy_yaml_input,lib_dir,modeltoplot):
     timeFiles = []
     # read png for scan 
     for f in os.listdir(directory_output+'timescan/'):
-        if f.lower().endswith(".png") and "raw_spectrum_"+str(modeltoplot) in f:
+        if f.lower().endswith(".png") and "raw_spectrum_TSMap_"+str(modeltoplot) in f:
             pngs1.append(directory_output+'timescan/'+ f)
             print(f)
 
@@ -837,12 +862,12 @@ def build_spectral_fit(cosipy_yaml_input,lib_dir,modeltoplot):
     # read png for external trigger
     for t in range(len(externalTrigger_start)):
         time_start=str(int(externalTrigger_start[t]))
-        pngs_sorted.append(directory_output+'raw_spectrum_'+modeltoplot+'_'+str(time_start)+'.png')
+        pngs_sorted.append(directory_output+'raw_spectrum_TSMap_'+modeltoplot+'_'+str(time_start)+'.png')
 
     for name in nameFiles_fit_sorted:
         num = re.findall(r"\d+", name)[-2]
         timeFiles.append(num)
-  
+
     frame_numtot=len(pngs_sorted)
     frame_numtot_external=len(externalTrigger_start)
     num_fitmodels=len(nameFiles_fit_external_sorted)
@@ -862,7 +887,7 @@ def build_spectral_fit(cosipy_yaml_input,lib_dir,modeltoplot):
 
         if frameNum<frame_numtot-frame_numtot_external:
 
-            name_var,value_var,errneg_var,errpos_var,unit_var = read_spectral_fit_info(frameNum,directory_output+'timescan/',modeltoplot)
+            name_var,value_var,errneg_var,errpos_var,unit_var = read_spectral_fit_info(frameNum,directory_output+'timescan/','TSMap_'+modeltoplot)
 
             draw.text((90, 70),'Time start= ' + str(timeFiles[frameNum]) + ' s' ,font=font2,fill=(0, 0, 0, 255))
             if len(value_var)==1:
@@ -877,7 +902,7 @@ def build_spectral_fit(cosipy_yaml_input,lib_dir,modeltoplot):
             numIndex=int(frameNum-(frame_numtot-frame_numtot_external))
             print(numIndex)
 
-            name_var,value_var,errneg_var,errpos_var,unit_var = read_spectral_fit_info(0,directory_output,modeltoplot)
+            name_var,value_var,errneg_var,errpos_var,unit_var = read_spectral_fit_info(0,directory_output,'TSMap_'+modeltoplot)
             draw.text((100, 80),'External trigger',font=font3,fill=(255, 0, 0, 255))# TRUE????????????????????? Existing?
             draw.text((100, 110),'External start='+str(externalTrigger_start[numIndex])+' s',font=font2,fill=(255, 0, 0, 255))
             draw.text((100, 130),'External stop='+str(externalTrigger_stop[numIndex])+' s',font=font2,fill=(255, 0, 0, 255))
@@ -893,7 +918,33 @@ def build_spectral_fit(cosipy_yaml_input,lib_dir,modeltoplot):
 
         pages.append(out.convert("RGB"))
         frameNum+=1
+        
+    # read png for CNN
+    name_varCNN,value_varCNN,errneg_varCNN,errpos_varCNN,unit_varCNN = read_spectral_fit_info(0,directory_output,'CNN_'+modeltoplot)
 
+    for f in os.listdir(directory_output):
+        if f.lower().endswith(".png") and "raw_spectrum_CNN_"+str(modeltoplot) in f:
+
+            num = re.findall(r"\d+", directory_output+ f)[-1]
+            print('+++++++++++++++++++++++++++++++++++++++++++++ ',num)
+            img = Image.open(directory_output+ f)
+            txt = Image.new("RGBA", img.size)
+            font = ImageFont.truetype("DejaVuSans.ttf", 10)
+
+            font3 = ImageFont.truetype("DejaVuSans.ttf", 20)
+            draw = ImageDraw.Draw(txt)
+            draw.text((500, 30),'CNN trigger' ,font=font3,fill=(255, 0, 0, 255))
+            draw.text((500, 70),str(modeltoplot) ,font=font3,fill=(255, 0, 0, 255))
+            draw.text((500, 100),'Trigger at '+str(num)+' s',font=font,fill=(0, 0, 0, 255))
+            
+            for uu in range(len(value_varCNN)):
+                draw.text((90, 150+uu*20),str(name_varCNN[uu].decode("utf-8")[-15:]) + ' = ' ,font=font2,fill=(0, 0, 0, 255))
+                draw.text((200, 150+uu*20),str(math.trunc(value_varCNN[uu]*1000)/1000) + ' (' + str(math.trunc(errneg_varCNN[uu]*10000)/10000) + ',' + str(math.trunc(errpos_varCNN[uu]*10000)/10000) + ')' ,font=font2,fill=(0, 0, 0, 255))
+                draw.text((320, 150+uu*20),str(unit_varCNN[uu].decode("utf-8")) ,font=font2,fill=(0, 0, 0, 255))
+
+            out = Image.alpha_composite(img, txt)
+            pages.append(out.convert("RGB"))
+        
     pages[0].save(
         directory_output+'raw_spectrum_'+modeltoplot+'_sequence.pdf',
         save_all=True,
@@ -912,7 +963,7 @@ def create_output_files_transient(cosipy_yaml_input,lib_dir):
     import astropy.units as u
 
     sys.path.append(lib_dir)
-    from funzioni_comuni import read_cosi_ts_detect,read_base_pipeline_params,read_trigger_content_multiple_yaml,select_data_transient
+    from funzioni_comuni import read_cosi_ts_detect,read_base_pipeline_params,read_trigger_content_multiple_yaml,select_data_transient,read_cosi_AD_detect,read_cosi_CNN_detect
     from yayc import Configurator
     full_config = Configurator.open(cosipy_yaml_input)
     t_scan_start_source=full_config["general_pipeline_config"]["t_scan_start_source"]
@@ -923,6 +974,10 @@ def create_output_files_transient(cosipy_yaml_input,lib_dir):
     threshold_TS=full_config["general_pipeline_config"]["ts_threshold"]
     
     externalTrigger_start,externalTrigger_stop,flag_trigger = read_trigger_content_multiple_yaml(lib_dir,trigger_list)
+    ## Anomaly detection trigger
+    AD_tstart,AD_tmax,AD_tstop,AD_maximumloss=read_cosi_AD_detect(directory_output+'output_anomaly.txt')
+    CNN_measured_l,CNN_measured_b,CNN_maxumumCTS,CNN_tmax=read_cosi_CNN_detect(directory_output+'output_cnn.txt')
+   
     nameFiles_TS = []
     trigger_TS = []
     trigger_l = []
@@ -950,7 +1005,7 @@ def create_output_files_transient(cosipy_yaml_input,lib_dir):
         
         measured_l,measured_b,error_coo,maxumumTS=read_cosi_ts_detect(directory_output+'cosi-tsdetect_'+time_start+'.txt')
         if maxumumTS>float(threshold_TS):
-            select_data_transient(cosipy_yaml_input,lib_dir,time_start,time_stop,'/home/gamma/workspace/data/',0)
+            select_data_transient(cosipy_yaml_input,lib_dir,time_start,time_stop,'/home/gamma/workspace/data/',0,0)
     
     time_frame=0
     for file in nameFiles_TS_sorted:
@@ -958,9 +1013,13 @@ def create_output_files_transient(cosipy_yaml_input,lib_dir):
         timestart=t_scan_start_source + (time_frame*t_scan_delta)
         timestop= timestart + t_scan_delta
         if maxumumTS_tmp>float(threshold_TS):
-            select_data_transient(cosipy_yaml_input,lib_dir,timestart,timestop,'/home/gamma/workspace/data/',1)
+            select_data_transient(cosipy_yaml_input,lib_dir,timestart,timestop,'/home/gamma/workspace/data/',1,0)
         time_frame+=1
-            
+
+    #save Anomaly detection + CNN output
+    if AD_maximumloss>0.1:
+        select_data_transient(cosipy_yaml_input,lib_dir,AD_tstart,AD_tstop,'/home/gamma/workspace/data/',0,1)
+        
 def prepare_alert_external(cosipy_yaml_input,lib_dir):
     import sys
     import os
@@ -971,7 +1030,7 @@ def prepare_alert_external(cosipy_yaml_input,lib_dir):
     import astropy.units as u
 
     sys.path.append(lib_dir)
-    from funzioni_comuni import read_cosi_ts_detect,read_base_pipeline_params,read_trigger_content_multiple_yaml
+    from funzioni_comuni import read_cosi_ts_detect,read_base_pipeline_params,read_trigger_content_multiple_yaml,read_cosi_AD_detect,read_cosi_CNN_detect
     from yayc import Configurator
     full_config = Configurator.open(cosipy_yaml_input)
     t_scan_start_source=full_config["general_pipeline_config"]["t_scan_start_source"]
@@ -998,7 +1057,11 @@ def prepare_alert_external(cosipy_yaml_input,lib_dir):
         nameFiles_TS,
         key=lambda f: int(re.findall(r'\d+', f)[-1])
     )
-
+    
+    ## Anomaly detection trigger
+    AD_tstart,AD_tmax,AD_tstop,AD_maximumloss=read_cosi_AD_detect(directory_output+'output_anomaly.txt')
+    CNN_measured_l,CNN_measured_b,CNN_maxumumCTS,CNN_tmax=read_cosi_CNN_detect(directory_output+'output_cnn.txt')
+   
     triggertype="NONE"
     first_time=1e20
     first_latitude=0
@@ -1023,8 +1086,8 @@ def prepare_alert_external(cosipy_yaml_input,lib_dir):
                 print('Confirmed_ext ',1,file=f)
                 print('timeStart ',time_start,file=f)
                 print('timeStart ',time_stop,file=f)
-                print('Galactic_lat ', measured_l,file=f)
-                print('Galactic_long ',measured_b,file=f)
+                print('Galactic_long ', measured_l,file=f)
+                print('Galactic_lat ',measured_b,file=f)
                 print('Resolution ',error_coo,file=f)
                 print('Max_TS= ',maxumumTS,file=f)
             else:
@@ -1055,8 +1118,8 @@ def prepare_alert_external(cosipy_yaml_input,lib_dir):
                 print('Independent ',1,file=f)
                 print('timeStart ',timestart,file=f)
                 print('timeStart ',timestop,file=f)
-                print('Galactic_lat ', measured_l_tmp,file=f)
-                print('Galactic_long ',measured_b_tmp,file=f)
+                print('Galactic_long ', measured_l_tmp,file=f)
+                print('Galactic_lat ',measured_b_tmp,file=f)
                 print('Resolution ',error_coo_tmp,file=f)
                 print('Max_TS= ',maxumumTS_tmp,file=f)
                 print('',file=f)
@@ -1066,6 +1129,17 @@ def prepare_alert_external(cosipy_yaml_input,lib_dir):
         if number_trigger_frames==0:
             print('Independent ',0,file=f)
 
+        
+        print('',file=f)
+        print('#############################',file=f)
+        print('Alert from Anomaly detection + CNN ',file=f)
+        if AD_maximumloss>0.1:
+            print('timeStart ',AD_tstart,file=f)
+            print('timeStop ',AD_tstop,file=f)
+            print('Galactic_long ', CNN_measured_l,file=f)
+            print('Galactic_lat ',CNN_measured_b,file=f)
+            print('MaxLoss ',AD_maximumloss,file=f)
+            
     ####################################################################
     # save json ########################################################
     ####################################################################
