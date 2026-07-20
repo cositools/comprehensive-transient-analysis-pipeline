@@ -1237,6 +1237,8 @@ def cleanup_and_format(cosipy_yaml_input,lib_dir):
     subprocess.run('mv '+directory_output+'FileOut* '+directory_output+'../garbagebin', shell=True)
     subprocess.run('mv '+directory_output+'file_select_transient*yaml '+directory_output+'../garbagebin', shell=True)
     subprocess.run('mv '+directory_output+'selected*fits '+directory_output+'../garbagebin', shell=True)
+    subprocess.run('mv '+directory_output+'timescan/*yaml '+directory_output+'../garbagebin', shell=True)
+    subprocess.run('mv '+directory_output+'timescan/selected*fits '+directory_output+'../garbagebin', shell=True)
     subprocess.run('mv '+directory_output+'Pseudo* '+directory_output+'../garbagebin', shell=True)
     subprocess.run('mv '+directory_output+'XXX* '+directory_output+'../garbagebin', shell=True)
 
