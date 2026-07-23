@@ -219,13 +219,12 @@ def format_override_val(fitmodel,measured_l,measured_b,error_coo):
     return var_override1,var_override2,var_override3,var_override4,var_override5,var_override6,var_override7,var_override8,modelname
 
 
-def read_file_histo(data_full,startPoint,endPoint,resolutionImage_tmp,binNumTime_tmp,output_name,eventDuration,numEvt):
+def read_file_histo(data_full,startPoint,endPoint,resolutionImage_tmp,binNumTime_tmp,output_name,eventDuration,numEvt,binTime_in):
     import cosipy
     import torch
     from histpy import Histogram
     import healpy as hp
     import numpy as np
-        
     imagePlotX_Z_t_tmp = torch.zeros(numEvt,resolutionImage_tmp,resolutionImage_tmp,resolutionImage_tmp,int(binNumTime_tmp))
     
     values = data_full.slice[{ "Time": slice(startPoint,endPoint) }].project("PsiChi","Phi","Time").contents
@@ -237,7 +236,7 @@ def read_file_histo(data_full,startPoint,endPoint,resolutionImage_tmp,binNumTime
     for iii in range(histoTime.nbins):
         if iii%eventDuration==0:
             referenceBin=iii
-        binTime = int(histoTime.axes['Time'].centers[iii].value - histoTime.axes['Time'].centers[referenceBin].value)             
+        binTime = int(int(histoTime.axes['Time'].centers[iii].value - histoTime.axes['Time'].centers[referenceBin].value) / int(binTime_in))
 
         for i in range(data_full.project('PsiChi').nbins):
             Psi = hp.pix2ang(8, i)[0]
@@ -256,7 +255,7 @@ def read_file_histo(data_full,startPoint,endPoint,resolutionImage_tmp,binNumTime
     
     return imagePlotX_Z_t_tmp
     
-def read_file_histo2(data_full,startPoint,endPoint,resolutionImage_tmp,binNumTime_tmp,output_name,eventDuration,numEvt):
+def read_file_histo2(data_full,startPoint,endPoint,resolutionImage_tmp,binNumTime_tmp,output_name,eventDuration,numEvt,binTime_in):
     import cosipy
     import torch
     from histpy import Histogram
@@ -274,7 +273,7 @@ def read_file_histo2(data_full,startPoint,endPoint,resolutionImage_tmp,binNumTim
     for iii in range(histoTime.nbins):
         if iii%eventDuration==0:
             referenceBin=iii
-        binTime = int(histoTime.axes['Time'].centers[iii].value - histoTime.axes['Time'].centers[referenceBin].value)             
+        binTime = int(int(histoTime.axes['Time'].centers[iii].value - histoTime.axes['Time'].centers[referenceBin].value) / int(binTime_in))
 
         for i in range(data_full.project('PsiChi').nbins):
             Psi = hp.pix2ang(8, i)[0]

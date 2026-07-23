@@ -27,7 +27,6 @@ def basic_light_curve(cosipy_yaml_input,lib_dir):
 
     data_full     = Histogram.open(str(input_file_name))
     binNumTime = int(data_full.project('Time').nbins)
-    print('~~~~~~~~~~~~~~~~~~~~~~~~~~',binNumTime)
     histo_time = data_full.project('Time')
     fig, ax = plt.subplots()
     histo_time.plot(ax=ax)   
@@ -41,7 +40,6 @@ def execute_bindata_grb(cosipy_yaml_input,lib_dir):
     print('Binning source')
     from funzioni_comuni import read_time_frame
     time_tot_start,time_tot_stop=read_time_frame()
-    print(time_tot_start,time_tot_stop)
 
     full_config = Configurator.open(cosipy_yaml_input)
     t_scan_start_source=full_config["general_pipeline_config"]["t_scan_start_source"]
@@ -93,7 +91,7 @@ def execute_tsmap_scan(cosipy_yaml_input,lib_dir):
     t_range_type=full_config["general_pipeline_config"]["t_range_type"]
     t_scan_delta=full_config["general_pipeline_config"]["t_scan_delta"]
     directory_output =full_config["general_pipeline_config"]["directory_output"]
-
+    
     if t_range_type=="full":
         t_scan_start_source=time_tot_start
         t_scan_stop_source=time_tot_stop
@@ -103,12 +101,12 @@ def execute_tsmap_scan(cosipy_yaml_input,lib_dir):
     
     fileNum=0
     print('|||||||||||||||||||||||||||||||||||||||||||||||',t_scan_start_source,t_scan_stop_source,t_scan_delta)
-    for time in range(t_scan_start_source,t_scan_stop_source,t_scan_delta):
+    for time in range(t_scan_start_source,t_scan_stop_source-t_scan_delta,t_scan_delta):
         outputFile=directory_output+'timescan/cosi-tsdetect_' + str(time) + '.txt'
         newpngFileName=directory_output+'timescan/raw_ts_' + str(time) + '.png'
         tstart=time
         tstop=time+t_scan_delta
-        print('################ ',time)
+        print('################ ',time,tstart,tstop)
         args=['--config',cosipy_yaml_input,'--output-dir',directory_output+'timescan','--overwrite','--tstart', str(tstart), '--tstop', str(tstop)]
         with open(outputFile, "w") as f:
             with redirect_stdout(f):
@@ -185,6 +183,8 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
     true_b =  full_config["general_pipeline_config"]["true_position_b"]
     true_l =  full_config["general_pipeline_config"]["true_position_l"]
 
+    binning_time =  full_config["bindata_soubk"]["dt"]
+    
     if t_range_type=="full":
         t_scan_start_source=time_tot_start
         t_scan_stop_source=time_tot_stop
@@ -208,7 +208,7 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
     binNumTime = int(data_full.project('Time').nbins)
 
     print('READFILE')
-    imagePlotX_Z_t_test = read_file_histo(data_full,t0_test,t0_test+binNumTime,resolutionImage,binNumTime,FileName,binNumTime,numberEventstest)
+    imagePlotX_Z_t_test = read_file_histo(data_full,t0_test,t0_test+binNumTime,resolutionImage,binNumTime,FileName,binNumTime,numberEventstest,binning_time)
     print('READFILE DONE')
 
     model = Autoencoder()
@@ -229,7 +229,7 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
 
     print(binNumTime,' time bins')
     for t in range(0,binNumTime):
-        image_for_input = imagePlotX_Z_t_test[:,:,:,:,int(t)]
+        image_for_input = imagePlotX_Z_t_test[:,:,:,:,int(t)]*(1./float(binning_time))
         outTEST=model(image_for_input)
         lossPlot = criterion(outTEST,image_for_input)
         frameNum[int(t)]=int(t)
@@ -252,24 +252,17 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
     # save the timing of the transient
     fout_trigg= open(directory_output+out_file,'w')
     if time_detection_first>=0:
-        transientstart=int(t_scan_start_source)+time_detection_first
-        transientstop=int(t_scan_start_source)+time_detection_last
-        maximum_time=int(t_scan_start_source)+max_loss_time
+        transientstart=int(t_scan_start_source)+time_detection_first*binning_time
+        transientstop=int(t_scan_start_source)+time_detection_last*binning_time
+        maximum_time=int(t_scan_start_source)+max_loss_time*binning_time
         print('t_start, t_max, t_stop ',transientstart,maximum_time,transientstop,file=fout_trigg)
         print('max_loss ',float(max_loss),file=fout_trigg)
     fout_trigg.close()
     
     print('NumBinsTime ######################################### ',binNumTime,max_loss_time,plotting_window)
     skymaptoplot = torch.t(lossMap_3D_tmp[0,:,:,0:10,int(max_loss_time-plotting_window):int(max_loss_time+plotting_window)].sum(dim=3).sum(dim=2))
-    
-    skymaptoplot_data = torch.t(signalMap_3D_tmp[0,:,:,0:10,int(max_loss_time-plotting_window):int(max_loss_time+plotting_window)].sum(dim=3).sum(dim=2))
-    skymaptoplot_data2 = torch.t(signalMap_3D_tmp[0,:,:,0:10,int(max_loss_time+20):int(max_loss_time+30)].sum(dim=3).sum(dim=2))
-
-    skymaptoplot_model = torch.t(modelMap_3D_tmp[0,:,:,0:10,int(max_loss_time-plotting_window):int(max_loss_time+plotting_window)].sum(dim=3).sum(dim=2))
-    skymaptoplot_model2 = torch.t(modelMap_3D_tmp[0,:,:,0:10,int(max_loss_time+20):int(max_loss_time+30)].sum(dim=3).sum(dim=2))
-
     ori = load_ori(str(ori_file2))
-    tmiddle=t_scan_start_source+max_loss_time
+    tmiddle=t_scan_start_source+max_loss_time*binning_time
     m = HealpixMap(nside = 8, coordsys=SpacecraftFrame( attitude = ori.interp_attitude(Time(tmiddle, format='unix')   )))
 
     arrTest_2 = np.zeros(data_full.project('PsiChi').nbins)
@@ -294,42 +287,6 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
     plt.ylabel('Bin Y')
     plt.colorbar()
     plt.savefig(directory_output+'imageLoss_2DPLot.png')
-    
-    plt.figure(figsize=(16.03, 10.41) ) 
-    plt.imshow(skymaptoplot_data.detach().numpy())
-    plt.gca().invert_yaxis() 
-    plt.title('DataMap - example; Test set')
-    plt.xlabel('Bin X')
-    plt.ylabel('Bin Y')
-    plt.colorbar()
-    plt.savefig(directory_output+'imageData_2DPLot.png')
-
-    plt.figure(figsize=(16.03, 10.41) ) 
-    plt.imshow(skymaptoplot_data2.detach().numpy())
-    plt.gca().invert_yaxis() 
-    plt.title('DataMap - example backg; Test set')
-    plt.xlabel('Bin X')
-    plt.ylabel('Bin Y')
-    plt.colorbar()
-    plt.savefig(directory_output+'imageData_2DPLot_2.png')
-    
-    plt.figure(figsize=(16.03, 10.41) ) 
-    plt.imshow(skymaptoplot_model.detach().numpy())
-    plt.gca().invert_yaxis() 
-    plt.title('ModelMap - example; Test set')
-    plt.xlabel('Bin X')
-    plt.ylabel('Bin Y')
-    plt.colorbar()
-    plt.savefig(directory_output+'imageModel_2DPLot.png')
-
-    plt.figure(figsize=(16.03, 10.41) ) 
-    plt.imshow(skymaptoplot_model2.detach().numpy())
-    plt.gca().invert_yaxis() 
-    plt.title('ModelMap background- example; Test set')
-    plt.xlabel('Bin X')
-    plt.ylabel('Bin Y')
-    plt.colorbar()
-    plt.savefig(directory_output+'imageModel_2DPLot_2.png')
 
     fig,ax = plt.subplots(subplot_kw = {'projection':'mollview', 'coord':'G'})
     m.plot(ax=ax,vmin=0)
@@ -379,6 +336,8 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     true_l =  full_config["general_pipeline_config"]["true_position_l"]
     show_true_position = full_config["general_pipeline_config"]["show_true_position"]
 
+    binning_time =  full_config["bindata_soubk"]["dt"]
+
     if t_range_type=="full":
         t_scan_start_source=time_tot_start
         t_scan_stop_source=time_tot_stop
@@ -398,32 +357,35 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     
     data_full     = Histogram.open(str(input_file_name))
     binNumTime = int(data_full.project('Time').nbins)
-    imagePlotX_Z_t_test = read_file_histo2(data_full,t0_test,t0_test+binNumTime,resolutionImage,binNumTime,FileName,binNumTime,numberEventstest)
-    print('########################### ',imagePlotX_Z_t_test.shape,binNumTime)
+    imagePlotX_Z_t_test = read_file_histo2(data_full,t0_test,t0_test+binNumTime,resolutionImage,binNumTime,FileName,binNumTime,numberEventstest,binning_time)
     
     model = CNN3D()
     state = torch.load(lib_dir+model_file)
     model.load_state_dict(state)
-
+    
     lightCurveMax=0
     latMax=0
     longMax=0
     tmax=0
     
-    for t in range(int(stepinterval),int(binNumTime)-int(stepinterval),int(stepinterval)):
-        image_for_input = imagePlotX_Z_t_test[0:1,:,:,:,int(t)-int(stepinterval):int(t)+int(stepinterval)].sum(dim=4)
+    stepcycle=stepinterval
+    widthanalyze=(2*stepcycle)*binning_time
+    if stepinterval==0:
+        stepcycle=1
+        widthanalyze=binning_time
+
+    for t in range(int(stepinterval),int(binNumTime)-int(stepinterval),int(stepcycle)):
+        image_for_input = imagePlotX_Z_t_test[0:1,:,:,:,int(t)-int(stepinterval):int(t)+int(stepinterval)+1].sum(dim=4) * (20./float(widthanalyze))
         lightCurveVal=image_for_input[0,0:50,0:100,0:50].sum(dim=2).sum(dim=1).sum(dim=0)
         if lightCurveVal>lightCurveMax:
             lightCurveMax=lightCurveVal
             tmax=t
 
-    rescalingFactor=1.
-    if lightCurveMax>2000:
-        rescalingFactor=lightCurveMax/1000. # Temporary solution for the extremely bright events. The training is done on events with peak < 2000 cts
-            
-    image_for_input = imagePlotX_Z_t_test[0:1,:,:,:,int(tmax)-int(stepinterval):int(tmax)+int(stepinterval)].sum(dim=4)
-    outTEST=model(image_for_input/rescalingFactor)
-    print(np.rad2deg(outTEST[0,0].detach().numpy()),outTEST[0,1].detach().numpy(),outTEST[0,2].detach().numpy(),lightCurveVal)
+    lightCurveMax-=widthanalyze*25
+    rescalingFactor=lightCurveMax/1000. # Temporary solution for the extremely bright events. The training is done on events with integral of the order of 1000 CTS
+    
+    image_for_input = imagePlotX_Z_t_test[0:1,:,:,:,int(tmax)-int(stepinterval):int(tmax)+int(stepinterval)+1].sum(dim=4) * (20./float(widthanalyze)) / rescalingFactor
+    outTEST=model(image_for_input)
     latMax=np.rad2deg(outTEST[0,0].detach().numpy())
     longMax_cos=outTEST[0,1].detach().numpy()
     longMax_sin=outTEST[0,2].detach().numpy()
@@ -435,11 +397,11 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     
     print(tmax,latMax,longMax)
 
-    skymaptoplot = imagePlotX_Z_t_test[0,:,:,0:10,int(tmax)-int(stepinterval):int(tmax)+int(stepinterval)].sum(dim=3).sum(dim=2)
+    skymaptoplot = imagePlotX_Z_t_test[0,:,:,0:10,int(tmax)-int(stepinterval):int(tmax)+int(stepinterval)+1].sum(dim=3).sum(dim=2)
     
     #####################################
     ori = load_ori(str(ori_file2))
-    tmiddle=t_scan_start_source+tmax
+    tmiddle=t_scan_start_source+(tmax+0.5)*binning_time
     attitude = ori.interp_attitude(Time(tmiddle, format='unix') )
     m = HealpixMap(nside = 8, coordsys=SpacecraftFrame( attitude = attitude))
     #####################################
@@ -554,7 +516,7 @@ def execute_threemlfit(cosipy_yaml_input,lib_dir,fitmodel,scanvar,CNNinput):
     else:
         if scanvar==1:
             directory_output+="timescan/"
-            for time in range(t_scan_start_source,t_scan_stop_source,t_scan_delta):
+            for time in range(t_scan_start_source,t_scan_stop_source-t_scan_delta,t_scan_delta):
                 array_range_start = torch.cat([array_range_start,torch.tensor([time])])
                 time_stop = time + t_scan_delta
                 array_range_stop = torch.cat([array_range_stop,torch.tensor([time_stop])])    
