@@ -308,7 +308,7 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     import sys
     sys.path.append(lib_dir)
     import healpy as hp
-    from funzioni_comuni import read_base_pipeline_params,read_file_histo2,read_anomaly_detection_config,read_file_histo_second,read_time_frame
+    from funzioni_comuni import read_base_pipeline_params,read_file_histo2,read_anomaly_detection_config,read_file_histo_second,read_time_frame,read_cosi_AD_detect
     from models import CNN3D
     from astropy.time import Time
     from histpy import Histogram
@@ -330,6 +330,7 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     trigger_list=full_config["general_pipeline_config"]["external_trigger_list"]
     threshold_TS=full_config["general_pipeline_config"]["ts_threshold"]
     cnn_config =full_config["general_pipeline_config"]["cnn_config"]
+    anomaly_config =full_config["general_pipeline_config"]["anomaly_config"]
     ori_file2 = full_config["general_pipeline_config"]["ori_file"]
     t_range_type=full_config["general_pipeline_config"]["t_range_type"]
     true_b =  full_config["general_pipeline_config"]["true_position_b"]
@@ -337,7 +338,8 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     show_true_position = full_config["general_pipeline_config"]["show_true_position"]
 
     binning_time =  full_config["bindata_soubk"]["dt"]
-
+    
+    
     if t_range_type=="full":
         t_scan_start_source=time_tot_start
         t_scan_stop_source=time_tot_stop
@@ -351,6 +353,11 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     stepinterval = full_config2["step_interval"]
     out_file = full_config2["file_out"]
 
+    full_config3 = Configurator.open(anomaly_config)
+    out_file_AD = full_config3["file_out"]
+    t_loss_start,t_loss_max,t_loss_stop,loss_max=read_cosi_AD_detect(directory_output+out_file_AD)
+    diffstart=(t_loss_max-t_scan_start_source)/binning_time
+    
     FileName=directory_output+"FileOut_test_3DCNN_"
     numberEventstest=1
     t0_test=0
@@ -381,27 +388,25 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
             lightCurveMax=lightCurveVal
             tmax=t
 
+    print('########################## ',tmax,diffstart)
     lightCurveMax-=widthanalyze*25
     rescalingFactor=lightCurveMax/1000. # Temporary solution for the extremely bright events. The training is done on events with integral of the order of 1000 CTS
     
-    image_for_input = imagePlotX_Z_t_test[0:1,:,:,:,int(tmax)-int(stepinterval):int(tmax)+int(stepinterval)+1].sum(dim=4) * (20./float(widthanalyze)) / rescalingFactor
+    image_for_input = imagePlotX_Z_t_test[0:1,:,:,:,int(diffstart)-int(stepinterval):int(diffstart)+int(stepinterval)+1].sum(dim=4) * (20./float(widthanalyze)) / rescalingFactor
     outTEST=model(image_for_input)
     latMax=np.rad2deg(outTEST[0,0].detach().numpy())
     longMax_cos=outTEST[0,1].detach().numpy()
     longMax_sin=outTEST[0,2].detach().numpy()
     longMax=np.rad2deg(np.atan2(longMax_sin,longMax_cos))
             
-    print(tmax,latMax,longMax)
     if longMax<0:
         longMax+=360
     
-    print(tmax,latMax,longMax)
-
-    skymaptoplot = imagePlotX_Z_t_test[0,:,:,0:10,int(tmax)-int(stepinterval):int(tmax)+int(stepinterval)+1].sum(dim=3).sum(dim=2)
+    skymaptoplot = imagePlotX_Z_t_test[0,:,:,0:10,int(diffstart)-int(stepinterval):int(diffstart)+int(stepinterval)+1].sum(dim=3).sum(dim=2)
     
     #####################################
     ori = load_ori(str(ori_file2))
-    tmiddle=t_scan_start_source+(tmax+0.5)*binning_time
+    tmiddle=t_scan_start_source+(diffstart+0.5)*binning_time
     attitude = ori.interp_attitude(Time(tmiddle, format='unix') )
     m = HealpixMap(nside = 8, coordsys=SpacecraftFrame( attitude = attitude))
     #####################################
@@ -453,7 +458,7 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
 
     file_CNN_save = open(directory_output+out_file,'w')
     print('l= ',coordin_new.l.value*u.deg,' b= ',coordin_new.b.value*u.deg,file=file_CNN_save)
-    print('tmax= ',int(t_scan_start_source)+int(tmax),' max= ', float(lightCurveMax),file=file_CNN_save)
+    print('tmax= ',int(t_scan_start_source)+int(diffstart),' max= ', float(lightCurveMax),file=file_CNN_save)
     file_CNN_save.close()
     
 def execute_threemlfit(cosipy_yaml_input,lib_dir,fitmodel,scanvar,CNNinput):
