@@ -56,9 +56,9 @@ How to test this first version:
 
 	-examplesForTest/CNNLocalizationConfig.yaml
 
-        -examplesForTest/AnomalyDetectionConfig1002.yaml (for the 1.5 ks source)
+	-examplesForTest/AnomalyDetectionConfig1002.yaml (for the 1.5 ks source)
 
-        -examplesForTest/CNNLocalizationConfig1002.yaml (for the 1.5 ks source)
+	-examplesForTest/CNNLocalizationConfig1002.yaml (for the 1.5 ks source)
 
 	under
 	../cosiflow/data/obs/2025_01/250101/auxil/
