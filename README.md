@@ -56,6 +56,10 @@ How to test this first version:
 
 	-examplesForTest/CNNLocalizationConfig.yaml
 
+        -examplesForTest/AnomalyDetectionConfig1002.yaml (for the 1.5 ks source)
+
+        -examplesForTest/CNNLocalizationConfig1002.yaml (for the 1.5 ks source)
+
 	under
 	../cosiflow/data/obs/2025_01/250101/auxil/
 
@@ -79,18 +83,20 @@ How to test this first version:
 
 *) What the test files are:
 
--evt 100: GRB_bn090424592 from DC4
+	-evt 100: GRB_bn090424592 from DC4
 
-	I put this file in three versions:
+		I put this file in three versions:
 
-	*full data
+		*full data
 
-	*downsampled0.1 (1 photon out of 10)
+		*downsampled0.1 (1 photon out of 10)
 
-	*downsampled0.01 (1 photon out of 100)
+		*downsampled0.01 (1 photon out of 100)
 
--bn110605183 from DC4
+	-bn110605183 from DC4
 
--evt 3: is bn110605183 with a shift in time, position and some rescaled luminosity.
+	-evt 3: is bn110605183 with a shift in time, position and some rescaled luminosity.
 
--evt 14: is bn110605183 with a shift in time, position and some rescaled luminosity.
+	-evt 14: is bn110605183 with a shift in time, position and some rescaled luminosity.
+
+	-evt 1002: this is the first example of a transient source of 1.5 ks duration. Only for testing purposes.
