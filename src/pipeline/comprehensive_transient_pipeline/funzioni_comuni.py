@@ -438,3 +438,139 @@ def select_data_transient(configfilename,lib_dir,t1,t2,datadir,scan_var,cnn_use)
     tseldata=UnBinnedData(yaml_path)
     tseldata.select_data_time(unbinned_data=datadir+unbinned_file,output_name=output_file_fits)
     subprocess.run("gunzip -f "+output_file_fits+".fits.gz", shell=True)
+
+
+# BGO functions
+def calculate_moving_average(dx_select,dt_select,k_sigma_thr,delta_integral):
+    import torch
+    import numpy as np
+
+    sum=0.
+    sum_2=0.
+    sum_norm=0
+    frames=0
+    average=0.
+    std_dev=0.
+    average_tens = torch.empty(0)
+    std_dev_tens = torch.empty(0)
+    t_tens = torch.empty(0)
+    n_bins = torch.empty(0)
+    values_tens = torch.empty(0)
+
+
+    for t in dx_select:
+        value_x=float(dx_select[int(frames)])
+
+        if value_x>average+std_dev*float(k_sigma_thr) and frames>delta_integral:
+            average_tens = torch.cat([average_tens,torch.tensor([average])])
+            std_dev_tens = torch.cat([std_dev_tens,torch.tensor([std_dev])])
+            t_tens = torch.cat([t_tens,torch.tensor([dt_select[int(frames)]])])
+            n_bins= torch.cat([n_bins,torch.tensor([int(frames)])])
+            values_tens = torch.cat([values_tens,torch.tensor([float(value_x)])])
+        sum+=value_x
+        sum_2+=np.power(value_x,2)
+        
+        frames_end = frames - delta_integral * 20. # if the basic time frame is 50 ms
+        if frames_end>=0:
+            value_x_end=float(dx_select[int(frames_end)])
+            sum-=value_x_end
+            sum_2-=np.power(value_x_end,2)
+        else:
+            sum_norm+=1
+            
+        average=sum/sum_norm
+        average_2 = sum_2/sum_norm
+        variance=average_2 - np.power(average,2)
+        std_dev=np.sqrt(variance)
+        
+        frames+=1
+    return t_tens,average_tens,std_dev_tens,n_bins,values_tens
+
+
+def save_trigger_file(num_bin,time,average,std_dev,maximum_peak,output_file):
+    f_file_list = open(output_file,'w')
+    for num in range(len(num_bin)):
+        print(int(num_bin[num]),float(time[num]),float(average[num]),float(std_dev[num]),float(maximum_peak[num]),file=f_file_list)
+    f_file_list.close()
+
+
+def read_trigger_file(file_input):
+    import torch
+    import numpy as np
+
+    f_file_list = open(file_input,'r')
+    content_file_list = f_file_list.read().splitlines()
+    create_arr_plot = np.zeros(len(content_file_list))
+    create_arr_content = np.ones(len(content_file_list))
+    file_test=0
+    for line_file_name in content_file_list:
+        line_split = line_file_name.split()
+        create_arr_plot[int(file_test)]=line_split[1]
+        create_arr_content[int(file_test)]=line_split[4]
+        file_test+=1     
+    f_file_list.close()
+    return create_arr_plot,create_arr_content
+
+
+def save_output_hdf5(input_file,output_file):
+    import h5py
+    from astropy.io import fits
+
+    with fits.open(input_file) as hdul:
+        header = hdul[0].header
+        data = hdul[1].data
+        counts = data["COUNT"]
+        time   = data["TIME"]
+        print(counts.shape,time.shape)
+        print(counts[:,0].shape)
+
+
+        with h5py.File(output_file, "w") as f_out:
+            f_out.create_dataset("x0", data=counts[:,0])
+            f_out.create_dataset("x1", data=counts[:,1])
+            f_out.create_dataset("y0", data=counts[:,2])
+            f_out.create_dataset("y1", data=counts[:,3])
+            f_out.create_dataset("z0", data=counts[:,4])
+            f_out.create_dataset("z1", data=counts[:,5])
+            f_out.create_dataset("time bins (s)", data=time[:])
+
+def print_basic_light_curve(input_file_test,t_start,t_stop,directory_output,outputName,array_trigg,channelNumber):
+    import h5py
+    import numpy as np
+    import matplotlib.pyplot as plt
+   
+    f = h5py.File(input_file_test,"r")
+    
+    d = f["time bins (s)"][:]
+    dx0 = f["x0"][:]
+    dx1 = f["x1"][:]
+    dy0 = f["y0"][:]
+    dy1 = f["y1"][:]
+    dz0 = f["z0"][:]
+    dz1 = f["z1"][:]
+
+    index=np.where((d>t_start) & (d<t_stop))
+    d_select = d[index]
+    dx0_select = dx0[index]
+    dx1_select = dx1[index]
+    dy0_select = dy0[index]
+    dy1_select = dy1[index]
+    dz0_select = dz0[index]
+    dz1_select = dz1[index]
+
+    fig, ax = plt.subplots(2,3, figsize=(12, 8))
+    ax[0,0].plot(d_select[:],dx0_select[:])
+    ax[1,0].plot(d_select[:],dx1_select[:])
+    ax[0,1].plot(d_select[:],dy0_select[:])
+    ax[1,1].plot(d_select[:],dy1_select[:])
+    ax[0,2].plot(d_select[:],dz0_select[:])
+    ax[1,2].plot(d_select[:],dz1_select[:])
+
+    ax[0,0].plot(array_trigg[0],array_trigg[1],'*')
+    ax[1,0].plot(array_trigg[2],array_trigg[3],'*')
+    ax[0,1].plot(array_trigg[4],array_trigg[5],'*')
+    ax[1,1].plot(array_trigg[6],array_trigg[7],'*')
+    ax[0,2].plot(array_trigg[8],array_trigg[9],'*')
+    ax[1,2].plot(array_trigg[10],array_trigg[11],'*')
+
+    fig.savefig(directory_output+outputName, dpi=300)
