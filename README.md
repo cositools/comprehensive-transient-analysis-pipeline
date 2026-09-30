@@ -17,7 +17,7 @@ How to test this first version:
 
 	mkdir ../cosiflow/data/obs/2025_01/250101/ged
 
-        mkdir ../cosiflow/data/obs/2025_01/250101/bgo
+	mkdir ../cosiflow/data/obs/2025_01/250101/bgo
 
 	mkdir ../cosiflow/data/transient/2025_01/250101001t/plots
 
