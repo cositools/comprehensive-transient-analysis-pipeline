@@ -17,6 +17,8 @@ How to test this first version:
 
 	mkdir ../cosiflow/data/obs/2025_01/250101/ged
 
+        mkdir ../cosiflow/data/obs/2025_01/250101/bgo
+
 	mkdir ../cosiflow/data/transient/2025_01/250101001t/plots
 
 	mkdir ../cosiflow/data/transient/2025_01/250101001t/products
@@ -30,9 +32,17 @@ How to test this first version:
 	under
 	../cosiflow/data/obs/2025_01/250101/ged/
 
-	I can provide any simulated GRB under request. 
+	I can provide any simulated GRB under request.
 
-3) Put:
+3) Put  
+	FullSet_gamma_50ms.fits
+	and
+	FullSet_proton_50ms.fits
+	../cosiflow/data/obs/2025_01/250101/bgo/
+
+	Fits files converted from E. Neights simulations.
+
+4) Put:
 
 	-Total_BG_without_SAAcomponent_3months_unbinned_data_filtered_with_SAAcut.fits
 
@@ -73,13 +83,15 @@ How to test this first version:
         cosipy_yaml_input_file = "/home/gamma/workspace/data/pipeline_Comprehensive_GeD_2*.yaml"
 	in the main PipelineComprehensive*py
 
-4) Put:
+5) Put:
 	pipeline_Comprehensive_GeD_2.yaml
-
+	and
+	pipeline_Comprehensive_BGO.yaml
+	
 	under 
 	../cosiflow/data/
 
-5) And run through the interface of cosiflow. For any problem/comment feedback is appreciated.
+6) And run through the interface of cosiflow. For any problem/comment feedback is appreciated.
 
 *) What the test files are:
 
@@ -100,3 +112,6 @@ How to test this first version:
 	-evt 14: is bn110605183 with a shift in time, position and some rescaled luminosity.
 
 	-evt 1002: this is the first example of a transient source of 1.5 ks duration. Only for testing purposes.
+
+	-BGO: these are the gamma and proton channels of 3 hours of E. Neights BGO simulations. 
+	      A conversion to fits file is done with a modified version of N. Parmiggiani tool.
