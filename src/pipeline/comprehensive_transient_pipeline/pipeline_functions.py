@@ -10,7 +10,8 @@ from typing import Any
 
 from matplotlib.lines import Line2D
 
-EXTERNAL_PYTHON = "/home/gamma/envs/cosipy_laura/bin/python"
+EXTERNAL_PYTHON = "/home/gamma/envs/cosipy/bin/python"
+
 
 def basic_light_curve(cosipy_yaml_input,lib_dir):
     import cosipy
@@ -104,6 +105,8 @@ def execute_tsmap_scan(cosipy_yaml_input,lib_dir):
     for time in range(t_scan_start_source,t_scan_stop_source-t_scan_delta,t_scan_delta):
         outputFile=directory_output+'timescan/cosi-tsdetect_' + str(time) + '.txt'
         newpngFileName=directory_output+'timescan/raw_ts_' + str(time) + '.png'
+        
+        newfitsFileName=directory_output+'timescan/raw_ts_' + str(time) + '.fits'
         tstart=time
         tstop=time+t_scan_delta
         print('################ ',time,tstart,tstop)
@@ -112,6 +115,7 @@ def execute_tsmap_scan(cosipy_yaml_input,lib_dir):
             with redirect_stdout(f):
                 cosi_tsdetect (argv=args)
                 subprocess.run('mv '+directory_output+'timescan/raw_ts.png '+newpngFileName, shell=True)
+                subprocess.run('mv '+directory_output+'timescan/raw_ts.fits '+newfitsFileName, shell=True)
         fileNum+=1
 
 
@@ -140,12 +144,14 @@ def execute_tsmap_external(cosipy_yaml_input,lib_dir):
         
         outputFile=directory_output+'cosi-tsdetect_' + str(externalTrigger_start_tmp) + '.txt'
         newpngFileName=directory_output+'raw_ts_' + str(externalTrigger_start_tmp) + '.png'
-    
+        newfitsFileName=directory_output+'raw_ts_' + str(externalTrigger_start_tmp) + '.fits'
+
         args=['--config',cosipy_yaml_input,'--output-dir',directory_output,'--overwrite','--tstart', str(externalTrigger_start_tmp), '--tstop', str(externalTrigger_stop_tmp)]
         with open(outputFile, "w") as f:
             with redirect_stdout(f):
                 cosi_tsdetect (argv=args)
                 subprocess.run('mv '+directory_output+'raw_ts.png '+newpngFileName, shell=True)
+                subprocess.run('mv '+directory_output+'raw_ts.fits '+newfitsFileName, shell=True)
 
 def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
     import cosipy

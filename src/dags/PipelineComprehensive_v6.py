@@ -16,7 +16,7 @@ def build_custom(dag):
     # ==============================================
     # 1. External interpreters + library dirs (same conventions as other DAGs)
     # ==============================================
-    EXTERNAL_PYTHON_COSIPY = cfg("EXTERNAL_PYTHON_COSIPY", "/home/gamma/envs/cosipy_laura/bin/python")
+    EXTERNAL_PYTHON_COSIPY = cfg("EXTERNAL_PYTHON_COSIPY", "/home/gamma/envs/cosipy/bin/python")
     LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE = cfg(
         "COMPREHENSIVE_LIB_DIR",
         "/home/gamma/airflow/pipeline/comprehensive-transient-analysis-pipeline.cfmodule/comprehensive_transient_pipeline/",
@@ -429,7 +429,8 @@ def build_custom(dag):
     transient_id_anomaly_task>>localization_cnn_task>>fittask_CNN>>join2
     join2>>ged_light_curve>>build_pdf_task>>merge_spectral_fit_multiple>>save_fits>>build_alert_task
     ################################
-    
+
+
 with COSIDAG(
     dag_id="Comprehensive_GeD_v6",
     schedule_interval=None,
