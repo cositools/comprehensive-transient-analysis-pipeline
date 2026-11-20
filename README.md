@@ -21,7 +21,7 @@ How to test this first version:
 2) Put 
 	data_grbdc3_full.fits
 	under
-	../cosiflow/data/obs/2028_01/280101/gcd/
+	../cosiflow/data/obs/2028_01/280101/gct/
 
 	I can provide any simulated GRB under request.
 
@@ -29,7 +29,7 @@ How to test this first version:
 	FullSet_gamma_50ms.fits
 	and
 	FullSet_proton_50ms.fits
-	../cosiflow/data/obs/2028_01/280101/bgo/
+	../cosiflow/data/obs/2028_01/280101/acs/
 
 	Fits files converted from E. Neights simulations.
 
