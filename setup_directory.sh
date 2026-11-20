@@ -1,19 +1,18 @@
 # Only for the developmenta phase...
 # Creates the HEASARC data structure as defined in
 # ICD Nov 2026
-# run as ./setup_directory.sh year month day day_fraction 
+# run as ./setup_directory.sh year month day day_fraction directory
 # Creates the structure of directories for the acquisition.
 # For the source directory, for the moment, adds only the Crab Nebula...
 # year, month, day refer to the time you put your data (arbitrary choice for the moment)
 # It works from the comprehensive-transient-analysis-pipeline/ directory...
 
-base_dir="../cosiflow/data/"
-#base_dir="data_somerandomname"
-
 year=$1
 month=$2
 day=$3
 day_fraction=$4
+base_dir=$5
+
 year_short=`echo $year | cut -c 3-4`
 echo $year_short
 

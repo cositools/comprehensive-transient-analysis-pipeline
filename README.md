@@ -14,8 +14,9 @@ How to test this first version:
 	the ICD for Nov. 2026 structure:
 	Go to comprehensive-transient-analysis-pipeline/ 
 	directory and
-	run bash ./setup_directory.sh 2028 01 01 001
-	where the parameters are year month day day_fraction (000 to 999)
+	run bash ./setup_directory.sh 2028 01 01 001 directoryName
+	where the parameters are year month day day_fraction (000 to 999) and the directory where you want to add the new directory structure
+	The baseline you should choose is ../cosiflow/data/
 
 2) Put 
 	data_grbdc3_full.fits
