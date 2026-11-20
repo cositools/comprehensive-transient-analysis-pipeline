@@ -440,7 +440,7 @@ with COSIDAG(
         "grb_file": "data_grbdc3_full.fits"
     },
     select_policy="latest_mtime",
-    only_basename="ged",
+    only_basename="gct",
     prefer_deepest=True,
     idle_seconds=5,
     level=3,

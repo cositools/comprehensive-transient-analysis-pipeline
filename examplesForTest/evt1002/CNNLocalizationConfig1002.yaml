@@ -1,5 +1,5 @@
 input_file: 
-  /home/gamma/workspace/data/transient/2025_01/250101001u/products/tsel_binned_data_local_galbk_grbdc3.hdf5
+  /home/gamma/workspace/data/transient/2028_01/280101001u/current/products/tsel_binned_data_local_galbk_grbdc3.hdf5
 model_file: 
   Model_3DCNN_newTarget_new.pth
 resolution_angle: 

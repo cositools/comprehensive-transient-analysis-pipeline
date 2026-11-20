@@ -3,7 +3,7 @@ The repository for the COSI comprehensive pipeline.
 
 # INSTALLATION
 Install in the same way as the fast pipeline. Substitute only "fast" -> "comprehensive" whenever needed.
-Warning: for the moment I download a specific version of cosipy from a repostory of Laura.
+Uses official cosipy now.
 
 # AFTER THE INSTALLATION IS SUCCESSFUL.
 
@@ -11,26 +11,16 @@ How to test this first version:
 
 1) create under 
 	../cosiflow/data/
-	the following structure:
-
-	mkdir ../cosiflow/data/obs/2025_01/250101/auxil 
-
-	mkdir ../cosiflow/data/obs/2025_01/250101/ged
-
-	mkdir ../cosiflow/data/obs/2025_01/250101/bgo
-
-	mkdir ../cosiflow/data/transient/2025_01/250101001t/plots
-
-	mkdir ../cosiflow/data/transient/2025_01/250101001t/products
-
-	mkdir ../cosiflow/data/transient/2025_01/250101001u/plots 
-
-	mkdir ../cosiflow/data/transient/2025_01/250101001u/products
+	the ICD for Nov. 2026 structure:
+	Go to comprehensive-transient-analysis-pipeline/ 
+	directory and
+	run bash ./setup_directory.sh 2028 01 01 001
+	where the parameters are year month day day_fraction (000 to 999)
 
 2) Put 
 	data_grbdc3_full.fits
 	under
-	../cosiflow/data/obs/2025_01/250101/ged/
+	../cosiflow/data/obs/2028_01/280101/gcd/
 
 	I can provide any simulated GRB under request.
 
@@ -38,7 +28,7 @@ How to test this first version:
 	FullSet_gamma_50ms.fits
 	and
 	FullSet_proton_50ms.fits
-	../cosiflow/data/obs/2025_01/250101/bgo/
+	../cosiflow/data/obs/2028_01/280101/bgo/
 
 	Fits files converted from E. Neights simulations.
 
@@ -71,7 +61,7 @@ How to test this first version:
 	-examplesForTest/CNNLocalizationConfig1002.yaml (for the 1.5 ks source)
 
 	under
-	../cosiflow/data/obs/2025_01/250101/auxil/
+	../cosiflow/data/obs/2028_01/280101/auxil/
 
 	I provided several examples for testing purposes.
 	Check in the bottom what such events are...

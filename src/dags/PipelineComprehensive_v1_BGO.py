@@ -16,7 +16,7 @@ def build_custom(dag):
     # ==============================================
     # 1. External interpreters + library dirs (same conventions as other DAGs)
     # ==============================================
-    EXTERNAL_PYTHON_COSIPY = cfg("EXTERNAL_PYTHON_COSIPY", "/home/gamma/envs/cosipy_laura/bin/python")
+    EXTERNAL_PYTHON_COSIPY = cfg("EXTERNAL_PYTHON_COSIPY", "/home/gamma/envs/cosipy/bin/python")
     LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE = cfg(
         "COMPREHENSIVE_LIB_DIR",
         "/home/gamma/airflow/pipeline/comprehensive-transient-analysis-pipeline.cfmodule/comprehensive_transient_pipeline/",
@@ -109,7 +109,7 @@ with COSIDAG(
         "grb_file": "FullSet_gamma_50ms.fits"
     },
     select_policy="latest_mtime",
-    only_basename="bgo",
+    only_basename="acs",
     prefer_deepest=True,
     idle_seconds=5,
     level=3,

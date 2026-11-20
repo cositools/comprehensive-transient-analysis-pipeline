@@ -1135,7 +1135,7 @@ def prepare_alert_external(cosipy_yaml_input,lib_dir):
     data = {
         "$schema": "https://gcn.nasa.gov/schema/XXXXXXXXXXXXXXXXX.json",
         "mission": "COSI",
-        "instrument": "GeD",
+        "instrument": "GCT",
         "pipeline": "Comprehensive pipeline",
         "messenger": "EM",
         "alert_datetime": str(dt),
@@ -1195,32 +1195,31 @@ def cleanup_and_format(cosipy_yaml_input,lib_dir):
     
     # clean up old files
     subprocess.run('mkdir '+directory_output+'timescan', shell=True)
-    subprocess.run('mkdir '+directory_output+'../garbagebin', shell=True)
 
-    subprocess.run('mv ~/tmp_trigger_list '+directory_output+'../garbagebin', shell=True)
-    subprocess.run('mv '+directory_output+'tsel_* '+directory_output+'../garbagebin', shell=True)
-    subprocess.run('mv '+directory_output+'bin* '+directory_output+'../garbagebin', shell=True)
-    subprocess.run('mv '+directory_output+'*png '+directory_output+'../garbagebin', shell=True)
-    subprocess.run('mv '+directory_output+'timescan/*png '+directory_output+'../garbagebin', shell=True)
-    subprocess.run('mv '+directory_output+'timescan/*h5 '+directory_output+'../garbagebin', shell=True)
-    subprocess.run('mv '+directory_output+'timescan/*txt '+directory_output+'../garbagebin', shell=True)
-    subprocess.run('mv '+directory_output+'*pdf '+directory_output+'../garbagebin', shell=True)
-    subprocess.run('mv '+directory_output+'results*h5 '+directory_output+'../garbagebin', shell=True)
-    subprocess.run('mv '+directory_output+'Pseudo_alert.txt '+directory_output+'../garbagebin', shell=True)
-    subprocess.run('mv '+directory_output+'FileOut* '+directory_output+'../garbagebin', shell=True)
-    subprocess.run('mv '+directory_output+'file_select_transient*yaml '+directory_output+'../garbagebin', shell=True)
-    subprocess.run('mv '+directory_output+'selected*fits '+directory_output+'../garbagebin', shell=True)
-    subprocess.run('mv '+directory_output+'timescan/*yaml '+directory_output+'../garbagebin', shell=True)
-    subprocess.run('mv '+directory_output+'timescan/selected*fits '+directory_output+'../garbagebin', shell=True)
-    subprocess.run('mv '+directory_output+'Pseudo* '+directory_output+'../garbagebin', shell=True)
-    subprocess.run('mv '+directory_output+'XXX* '+directory_output+'../garbagebin', shell=True)
+    subprocess.run('mv ~/tmp_trigger_list '+directory_output+'../../previous/products/', shell=True)
+    subprocess.run('mv '+directory_output+'tsel_* '+directory_output+'../../previous/products/', shell=True)
+    subprocess.run('mv '+directory_output+'bin* '+directory_output+'../../previous/products/', shell=True)
+    subprocess.run('mv '+directory_output+'*png '+directory_output+'../../previous/products/', shell=True)
+    subprocess.run('mv '+directory_output+'timescan/*png '+directory_output+'../../previous/products/', shell=True)
+    subprocess.run('mv '+directory_output+'timescan/*h5 '+directory_output+'../../previous/products/', shell=True)
+    subprocess.run('mv '+directory_output+'timescan/*txt '+directory_output+'../../previous/products/', shell=True)
+    subprocess.run('mv '+directory_output+'*pdf '+directory_output+'../../previous/products/', shell=True)
+    subprocess.run('mv '+directory_output+'results*h5 '+directory_output+'../../previous/products/', shell=True)
+    subprocess.run('mv '+directory_output+'Pseudo_alert.txt '+directory_output+'../../previous/products/', shell=True)
+    subprocess.run('mv '+directory_output+'FileOut* '+directory_output+'../../previous/products/', shell=True)
+    subprocess.run('mv '+directory_output+'file_select_transient*yaml '+directory_output+'../../previous/products/', shell=True)
+    subprocess.run('mv '+directory_output+'selected*fits '+directory_output+'../../previous/products/', shell=True)
+    subprocess.run('mv '+directory_output+'timescan/*yaml '+directory_output+'../../previous/products/', shell=True)
+    subprocess.run('mv '+directory_output+'timescan/selected*fits '+directory_output+'../../previous/products/', shell=True)
+    subprocess.run('mv '+directory_output+'Pseudo* '+directory_output+'../../previous/products/', shell=True)
+    subprocess.run('mv '+directory_output+'XXX* '+directory_output+'../../previous/products/', shell=True)
 
     fileName_toClean = directory_output+"cosi-tsdetect_*.txt"
-    subprocess.run('mv ' + fileName_toClean + ' '+directory_output+'../garbagebin',shell=True)
+    subprocess.run('mv ' + fileName_toClean + ' '+directory_output+'../../previous/products/',shell=True)
     fileName_toClean = directory_output+"output_anomaly.txt"
-    subprocess.run('mv ' + fileName_toClean + ' '+directory_output+'../garbagebin',shell=True)
+    subprocess.run('mv ' + fileName_toClean + ' '+directory_output+'../../previous/products/',shell=True)
     fileName_toClean = directory_output+"output_cnn.txt"
-    subprocess.run('mv ' + fileName_toClean + ' '+directory_output+'../garbagebin',shell=True)
+    subprocess.run('mv ' + fileName_toClean + ' '+directory_output+'../../previous/products/',shell=True)
 
     # since I cannot include the python_callable in the branch I need a tmp file with the list of external triggers
     subprocess.run('cat '+trigger_list+' > /home/gamma/tmp_trigger_list',shell=True)
