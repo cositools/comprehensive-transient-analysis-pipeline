@@ -574,3 +574,57 @@ def print_basic_light_curve(input_file_test,t_start,t_stop,directory_output,outp
     ax[1,2].plot(array_trigg[10],array_trigg[11],'*')
 
     fig.savefig(directory_output+outputName, dpi=300)
+
+def change_yaml_file(data,new_year,new_month,new_day,new_fraction):
+    if isinstance(data, dict):
+        for key, value in data.items():
+            data[key]=change_yaml_file(value,new_year,new_month,new_day,new_fraction)
+    elif isinstance(data, list):
+        for index, element in enumerate(data):
+            data[index]=change_yaml_file(element,new_year,new_month,new_day,new_fraction)
+    elif isinstance(data, str):
+        data=data.replace("280101001",new_year[2:]+new_month+new_day+new_fraction)
+        data=data.replace("2028_01",new_year+"_"+new_month)
+        data=data.replace("280101",new_year[2:]+new_month+new_day)
+    return data
+
+def extract_date_strings(dir_mon):
+    # selects last directories and provides strings to change config files
+    import yaml
+    import io
+    from pathlib import Path
+    #######################
+    path_test = Path(dir_mon)
+    dirs_recent = sorted(
+    (p for p in path_test.iterdir() if p.is_dir()),
+    key=lambda p: p.stat().st_mtime,
+    reverse=True,
+    )
+    last_dir = dirs_recent[0] if dirs_recent else None
+    year_last=str(last_dir)[-7:-3]
+    print("LAST DIR ",last_dir,year_last)
+    #######################
+    path_test2 = Path(last_dir)
+    dirs_recent2 = sorted(
+    (p for p in path_test2.iterdir() if p.is_dir()),
+    key=lambda p: p.stat().st_mtime,
+    reverse=True,
+    )
+    last_dir2 = dirs_recent2[0] if dirs_recent2 else None
+    year_last_short=str(last_dir2)[-6:-4]
+    month_last=str(last_dir2)[-4:-2]
+    day_last=str(last_dir2)[-2:]
+    print("LAST DIR2 ",last_dir2,year_last_short,month_last,day_last)
+    #######################
+    path_test3 = Path(dir_mon+"/../transient/"+str(year_last)+"_"+str(month_last))
+    dirs_recent3 = sorted(
+    (p for p in path_test3.iterdir() if p.is_dir()),
+    key=lambda p: p.stat().st_mtime,
+    reverse=True,
+    )
+    last_dir3 = dirs_recent3[0] if dirs_recent3 else None
+    day_fraction_last=str(last_dir3)[-4:-1]
+    print("LAST DIR3 ",last_dir3,day_fraction_last)
+    #######################
+    return year_last,year_last_short,month_last,day_last,day_fraction_last
+    

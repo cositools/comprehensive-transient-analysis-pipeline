@@ -1171,7 +1171,7 @@ def prepare_alert_external(cosipy_yaml_input,lib_dir):
 
 def cleanup_and_format(cosipy_yaml_input,lib_dir):
     # some cleanup and some service directory creation
-
+    
     from PIL import Image,ImageDraw,ImageFont
     import numpy as np
     import cosipy
@@ -1226,3 +1226,34 @@ def cleanup_and_format(cosipy_yaml_input,lib_dir):
 
     # check min and max time of the unbinned input file. Save the info in a tmp file
     start_time,stop_time=check_start_stop_time(lib_dir,cosipy_yaml_input,'/home/gamma/workspace/data/')
+
+
+def define_day_config(cosipy_yaml_input,lib_dir,dir_mon):
+    # reads some standard configuration file, defines a specific format and saves the file
+    import yaml
+    import io
+    from funzioni_comuni import change_yaml_file,extract_date_strings
+    new_year,new_year_short,new_month,new_day,new_fraction=extract_date_strings(dir_mon)
+    save_path=""
+    save_path2=""
+    
+    with open(cosipy_yaml_input) as stream:
+        try:
+            data_yaml=yaml.safe_load(stream)
+            data_yaml2=change_yaml_file(data_yaml,new_year,new_month,new_day,new_fraction)
+
+            save_new_file=dir_mon+new_year+"_"+new_month+"/"+new_year_short+new_month+new_day+"/auxil/"
+            new_config_name="pipeline_Comprehensive_"+new_year_short+new_month+new_day+new_fraction+".yaml"
+            save_path=save_new_file+new_config_name
+            with open(save_path, "w", encoding="utf-8") as f:
+                yaml.dump(data_yaml2, f, sort_keys=False)
+
+            save_path2=dir_mon+"../"+new_config_name
+            with open(save_path2, "w", encoding="utf-8") as f:
+                yaml.dump(data_yaml2, f, sort_keys=False)
+                
+        except yaml.YAMLError as exc:
+            print(exc)
+            
+    return save_path2
+

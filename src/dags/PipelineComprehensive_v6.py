@@ -22,7 +22,7 @@ def build_custom(dag):
         "/home/gamma/airflow/pipeline/comprehensive-transient-analysis-pipeline.cfmodule/comprehensive_transient_pipeline/",
     )
 
-    cosipy_yaml_input_file = "/home/gamma/workspace/data/pipeline_Comprehensive_GeD_2.yaml"
+    cosipy_yaml_input_file_first = "/home/gamma/workspace/data/pipeline_Comprehensive_GeD_2.yaml"
     
     #######################################
     # full-sky light curve
@@ -40,7 +40,7 @@ def build_custom(dag):
         python=EXTERNAL_PYTHON_COSIPY,
         python_callable=light_curve,
         op_kwargs={
-            "config_path": cosipy_yaml_input_file,
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
         },
         dag=dag,
@@ -49,7 +49,6 @@ def build_custom(dag):
     
     #######################################
     # bin source file
-    
     def binning_data(config_path: str, lib_dir: str):
         import os
         import sys
@@ -64,7 +63,7 @@ def build_custom(dag):
         python=EXTERNAL_PYTHON_COSIPY,
         python_callable=binning_data,
         op_kwargs={
-            "config_path": cosipy_yaml_input_file,
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
         },
         dag=dag,
@@ -87,7 +86,7 @@ def build_custom(dag):
         python=EXTERNAL_PYTHON_COSIPY,
         python_callable=binning_data_bk,
         op_kwargs={
-            "config_path": cosipy_yaml_input_file,
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
         },
         dag=dag,
@@ -110,7 +109,7 @@ def build_custom(dag):
         python=EXTERNAL_PYTHON_COSIPY,
         python_callable=ts_map_scan,
         op_kwargs={
-            "config_path": cosipy_yaml_input_file,
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
         },
         dag=dag,
@@ -133,7 +132,7 @@ def build_custom(dag):
         python=EXTERNAL_PYTHON_COSIPY,
         python_callable=ts_map_external,
         op_kwargs={
-            "config_path": cosipy_yaml_input_file,
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
         },
         dag=dag,
@@ -159,7 +158,7 @@ def build_custom(dag):
         task_id="check_external_trigg",
         python_callable=check_external_task,
         op_kwargs={
-            "config_path": cosipy_yaml_input_file,
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
         },
     )
@@ -187,7 +186,7 @@ def build_custom(dag):
         python=EXTERNAL_PYTHON_COSIPY,  # Specifica l'interprete dell'ambiente cosipy
         python_callable=execute_spectral_fit,
         op_kwargs={
-            "config_path": cosipy_yaml_input_file,
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
             "model_fit": i,
             "scan_flag": 0,
@@ -211,7 +210,7 @@ def build_custom(dag):
         python=EXTERNAL_PYTHON_COSIPY,  # Specifica l'interprete dell'ambiente cosipy
         python_callable=execute_spectral_fit,
         op_kwargs={
-            "config_path": cosipy_yaml_input_file,
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
             "model_fit": i,
             "scan_flag": 0,
@@ -234,7 +233,7 @@ def build_custom(dag):
         python=EXTERNAL_PYTHON_COSIPY,  # Specifica l'interprete dell'ambiente cosipy
         python_callable=execute_spectral_fit,
         op_kwargs={
-            "config_path": cosipy_yaml_input_file,
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
             "model_fit": i,
             "scan_flag": 1,
@@ -262,7 +261,7 @@ def build_custom(dag):
         python=EXTERNAL_PYTHON_COSIPY,
         python_callable=build_pdf,
         op_kwargs={
-            "config_path": cosipy_yaml_input_file,
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
         },
         dag=dag,
@@ -293,7 +292,7 @@ def build_custom(dag):
         python=EXTERNAL_PYTHON_COSIPY,
         python_callable=build_spectral_pdf,
         op_kwargs={
-            "config_path": cosipy_yaml_input_file,
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
             "model_merge": modelname
         },
@@ -318,12 +317,34 @@ def build_custom(dag):
         python=EXTERNAL_PYTHON_COSIPY,
         python_callable=build_alert_file,
         op_kwargs={
-            "config_path": cosipy_yaml_input_file,
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
         },
         dag=dag,
     )
     #######################################
+    
+    # redefine config for specific data download
+    def redefine_config(config_path: str, lib_dir: str,dir_mon: str):
+        import os
+        import sys
+        import yaml
+        sys.path.append(lib_dir)
+
+        from pipeline_functions import define_day_config
+        return define_day_config(config_path,lib_dir,dir_mon)
+        
+    define_config = ExternalPythonOperator(
+        task_id="define_day_config",
+        python=EXTERNAL_PYTHON_COSIPY,
+        python_callable=redefine_config,
+        op_kwargs={
+            "config_path": cosipy_yaml_input_file_first,
+            "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
+            "dir_mon": monitor_data(),
+        },
+        dag=dag,
+    )
     
     #######################################
     # Clean up and format
@@ -341,7 +362,8 @@ def build_custom(dag):
         python=EXTERNAL_PYTHON_COSIPY,
         python_callable=cleanup_funct,
         op_kwargs={
-            "config_path": cosipy_yaml_input_file,
+            #"config_path": cosipy_yaml_input_file_first,
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
         },
         dag=dag,
@@ -364,7 +386,7 @@ def build_custom(dag):
         python=EXTERNAL_PYTHON_COSIPY,
         python_callable=transient_id_anomaly,
         op_kwargs={
-            "config_path": cosipy_yaml_input_file,
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
         },
         dag=dag,
@@ -387,7 +409,7 @@ def build_custom(dag):
         python=EXTERNAL_PYTHON_COSIPY,
         python_callable=localization_cnn,
         op_kwargs={
-            "config_path": cosipy_yaml_input_file,
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
         },
         dag=dag,
@@ -409,25 +431,27 @@ def build_custom(dag):
         python=EXTERNAL_PYTHON_COSIPY,
         python_callable=transient_fits_save,
         op_kwargs={
-            "config_path": cosipy_yaml_input_file,
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
         },
         dag=dag,
     )
-    
-    
+      
     #######################################
     
+    #######################################
+
     join = EmptyOperator(task_id="join")
     join2 = EmptyOperator(task_id="join2")
     
     ######### wiring definition #####
-    cleanup_task>>[ged_data_binning,ged_data_binning_bk]>>join
+    define_config>>cleanup_task>>[ged_data_binning,ged_data_binning_bk]>>join
     join>>[ged_ts_map_scan,transient_id_anomaly_task,check_external_funct]
     check_external_funct>>ged_ts_map_external>>fittask_externaltrigger>>join2
     ged_ts_map_scan>>fittask_scan>>join2
     transient_id_anomaly_task>>localization_cnn_task>>fittask_CNN>>join2
     join2>>ged_light_curve>>build_pdf_task>>merge_spectral_fit_multiple>>save_fits>>build_alert_task
+    
     ################################
 
 
@@ -446,5 +470,6 @@ with COSIDAG(
     level=3,
     build_custom=build_custom,
     tags=["example"],
+
 ):
     pass
