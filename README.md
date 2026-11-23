@@ -14,14 +14,14 @@ How to test this first version:
 	the ICD for Nov. 2026 structure:
 	Go to comprehensive-transient-analysis-pipeline/ 
 	directory and
-	run bash ./setup_directory.sh 2028 01 01 001 directoryName
+	run bash ./setup_directory.sh YYYY MM DD DD_FR directoryName
 	where the parameters are year month day day_fraction (000 to 999) and the directory where you want to add the new directory structure
 	The baseline you should choose is ../cosiflow/data/
 
 2) Put 
 	data_grbdc3_full.fits
 	under
-	../cosiflow/data/obs/2028_01/280101/gct/
+	../cosiflow/data/obs/YYYY_MM/YYMMDD/gct/
 
 	I can provide any simulated GRB under request.
 
@@ -29,7 +29,7 @@ How to test this first version:
 	FullSet_gamma_50ms.fits
 	and
 	FullSet_proton_50ms.fits
-	../cosiflow/data/obs/2028_01/280101/acs/
+	../cosiflow/data/obs/YYYY_MM/YYMMDD/acs/
 
 	Fits files converted from E. Neights simulations.
 
@@ -62,7 +62,7 @@ How to test this first version:
 	-examplesForTest/CNNLocalizationConfig1002.yaml (for the 1.5 ks source)
 
 	under
-	../cosiflow/data/obs/2028_01/280101/auxil/
+	../cosiflow/data/obs/YYYY_MM/YYMMDD/auxil/
 
 	I provided several examples for testing purposes.
 	Check in the bottom what such events are...
