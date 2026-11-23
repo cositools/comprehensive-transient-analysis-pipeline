@@ -946,6 +946,7 @@ def create_output_files_transient(cosipy_yaml_input,lib_dir):
     trigger_list=full_config["general_pipeline_config"]["external_trigger_list"]
     threshold_TS=full_config["general_pipeline_config"]["ts_threshold"]
     anomaly_config =full_config["general_pipeline_config"]["anomaly_config"]
+
     full_config2 = Configurator.open(anomaly_config)
     threshold_loss = full_config2["loss_threshold"]
 
@@ -975,26 +976,34 @@ def create_output_files_transient(cosipy_yaml_input,lib_dir):
     first_latitude=0
     first_longitude=0
 
+    id_transient=0
+    
+    ## External trigger
     for i in range(len(externalTrigger_start)):
         time_start=str(int(externalTrigger_start[i]))
         time_stop=str(int(externalTrigger_stop[i]))
         
         measured_l,measured_b,error_coo,maxumumTS=read_cosi_ts_detect(directory_output+'cosi-tsdetect_'+time_start+'.txt')
         if maxumumTS>float(threshold_TS):
-            select_data_transient(cosipy_yaml_input,lib_dir,time_start,time_stop,'/home/gamma/workspace/data/',0,0)
-    
+            select_data_transient(cosipy_yaml_input,lib_dir,time_start,time_stop,'/home/gamma/workspace/data/',0,0,id_transient)
+            id_transient+=1
+
+    # Blind searches ###############
+    # TSMap
     time_frame=0
     for file in nameFiles_TS_sorted:
         measured_l_tmp,measured_b_tmp,error_coo_tmp,maxumumTS_tmp=read_cosi_ts_detect(file)
         timestart=t_scan_start_source + (time_frame*t_scan_delta)
         timestop= timestart + t_scan_delta
         if maxumumTS_tmp>float(threshold_TS):
-            select_data_transient(cosipy_yaml_input,lib_dir,timestart,timestop,'/home/gamma/workspace/data/',1,0)
+            select_data_transient(cosipy_yaml_input,lib_dir,timestart,timestop,'/home/gamma/workspace/data/',1,0,id_transient)
+            id_transient+=1
         time_frame+=1
 
-    #save Anomaly detection + CNN output
+    # Anomaly detection + CNN output
     if AD_maximumloss>float(threshold_loss):
-        select_data_transient(cosipy_yaml_input,lib_dir,AD_tstart,AD_tstop,'/home/gamma/workspace/data/',0,1)
+        select_data_transient(cosipy_yaml_input,lib_dir,AD_tstart,AD_tstop,'/home/gamma/workspace/data/',0,1,id_transient)
+        id_transient+=1
         
 def prepare_alert_external(cosipy_yaml_input,lib_dir):
     import sys
@@ -1244,10 +1253,16 @@ def define_day_config(cosipy_yaml_input,lib_dir,dir_mon):
 
             save_new_file=dir_mon+new_year+"_"+new_month+"/"+new_year_short+new_month+new_day+"/auxil/"
             new_config_name="pipeline_Comprehensive_"+new_year_short+new_month+new_day+new_fraction+".yaml"
+
+            data_yaml2['general_pipeline_config']['year']=str(new_year)
+            data_yaml2['general_pipeline_config']['month']=str(new_month)
+            data_yaml2['general_pipeline_config']['day']=str(new_day)
+            data_yaml2['general_pipeline_config']['day_fraction']=str(new_fraction)
+            
             save_path=save_new_file+new_config_name
             with open(save_path, "w", encoding="utf-8") as f:
                 yaml.dump(data_yaml2, f, sort_keys=False)
-
+                
             save_path2=dir_mon+"../"+new_config_name
             with open(save_path2, "w", encoding="utf-8") as f:
                 yaml.dump(data_yaml2, f, sort_keys=False)

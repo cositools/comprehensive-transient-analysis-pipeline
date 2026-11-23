@@ -16,8 +16,9 @@ How to test this first version:
 	directory and
 	run bash ./setup_directory.sh YYYY MM DD DD_FR directoryName
 	where the parameters are year month day day_fraction (000 to 999) and the directory where you want to add the new directory structure
-	The baseline you should choose is ../cosiflow/data/
-	Now the pipeline will automatically update all the references to the data and configuration directory inside the yaml file.
+	The baseline you should choose is ../cosiflow/data/.
+
+	Now the pipeline will automatically update all the references to the data and configuration directories inside the yaml file.
 
 2) Put 
 	data_grbdc3_full.fits

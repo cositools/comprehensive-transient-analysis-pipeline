@@ -404,7 +404,7 @@ def read_time_frame():
     file_time_frame.close()
     return time1,time2
 
-def select_data_transient(configfilename,lib_dir,t1,t2,datadir,scan_var,cnn_use):
+def select_data_transient(configfilename,lib_dir,t1,t2,datadir,scan_var,cnn_use,id_transient):
     import sys
     sys.path.append(lib_dir)
     import torch
@@ -413,7 +413,7 @@ def select_data_transient(configfilename,lib_dir,t1,t2,datadir,scan_var,cnn_use)
     from cosipy.pipeline.src.preprocessing import write_yaml
     from cosipy import UnBinnedData
     import subprocess
-    
+
     time_start_new=t1
     time_stop_new=t2
     full_config = Configurator.open(configfilename)
@@ -422,17 +422,36 @@ def select_data_transient(configfilename,lib_dir,t1,t2,datadir,scan_var,cnn_use)
     resp_path=full_config["bindata_soubk"]["response"]["args"]
     dt=full_config["bindata_soubk"]["dt"]
     outdir=full_config["general_pipeline_config"]["directory_output"]
+    year =full_config["general_pipeline_config"]["year"]
+    month =full_config["general_pipeline_config"]["month"]
+    day =full_config["general_pipeline_config"]["day"]
+    day_fraction =full_config["general_pipeline_config"]["day_fraction"]
 
     out_tmp = outdir
+    external_trigg="t"
     if scan_var==1:
         out_tmp=outdir+'timescan/'
-
+        external_trigg="u"
+        
     CNN_var="_"
+    method="t"
     if cnn_use==1:
-       CNN_var+="CNN_" 
-    
+       CNN_var+="CNN_"
+       external_trigg="u"
+       method="c"
+       
     yaml_path        = out_tmp+'file_select_transient_'+str(time_start_new)+'.yaml'
-    output_file_fits = out_tmp+'selected_event'+CNN_var+str(time_start_new)
+    #output_file_fits = out_tmp+'selected_event'+CNN_var+str(time_start_new)
+    start_time,stop_time=read_time_frame()
+    diff_time = time_start_new-start_time # time difference from start of file
+
+    #dt = datetime(int(year), int(month),int(day), 0, 0, 0)
+    #diff_time = int(time_start_new)-int(dt.timestamp())
+    print('DIFFTIME################################### ',diff_time)
+    
+    fullstring= f"{int(diff_time):04d}"
+    output_file_fits = outdir+'cs'+str(year)[2:]+str(month)+str(day)+"_"+str(fullstring)+external_trigg+method+"_gct_l2"
+    
     write_yaml(datadir+unbinned_file,datadir+ori_file,datadir+resp_path[0], dt,float(time_start_new),float(time_stop_new),yaml_path)
     
     tseldata=UnBinnedData(yaml_path)
