@@ -1197,6 +1197,7 @@ def cleanup_and_format(cosipy_yaml_input,lib_dir):
     t_scan_stop_source=full_config["general_pipeline_config"]["t_scan_stop_source"]
     t_scan_delta=full_config["general_pipeline_config"]["t_scan_delta"]
     directory_output =full_config["general_pipeline_config"]["directory_output"]
+    directory_output_trigg =full_config["general_pipeline_config"]["directory_output_trigg"]
     trigger_list=full_config["general_pipeline_config"]["external_trigger_list"]
     threshold_TS=full_config["general_pipeline_config"]["ts_threshold"]
     
@@ -1217,11 +1218,12 @@ def cleanup_and_format(cosipy_yaml_input,lib_dir):
     subprocess.run('mv '+directory_output+'Pseudo_alert.txt '+directory_output+'../../previous/products/', shell=True)
     subprocess.run('mv '+directory_output+'FileOut* '+directory_output+'../../previous/products/', shell=True)
     subprocess.run('mv '+directory_output+'file_select_transient*yaml '+directory_output+'../../previous/products/', shell=True)
-    subprocess.run('mv '+directory_output+'selected*fits '+directory_output+'../../previous/products/', shell=True)
+    subprocess.run('mv '+directory_output+'cs*fits '+directory_output+'../../previous/products/', shell=True)
     subprocess.run('mv '+directory_output+'timescan/*yaml '+directory_output+'../../previous/products/', shell=True)
-    subprocess.run('mv '+directory_output+'timescan/selected*fits '+directory_output+'../../previous/products/', shell=True)
+    subprocess.run('mv '+directory_output+'timescan/*fits '+directory_output+'../../previous/products/', shell=True)
     subprocess.run('mv '+directory_output+'Pseudo* '+directory_output+'../../previous/products/', shell=True)
     subprocess.run('mv '+directory_output+'XXX* '+directory_output+'../../previous/products/', shell=True)
+    subprocess.run('mv '+directory_output_trigg+'cs*fits '+directory_output_trigg+'../../previous/products/', shell=True)
 
     fileName_toClean = directory_output+"cosi-tsdetect_*.txt"
     subprocess.run('mv ' + fileName_toClean + ' '+directory_output+'../../previous/products/',shell=True)
