@@ -917,7 +917,7 @@ def build_spectral_fit(cosipy_yaml_input,lib_dir,modeltoplot):
         append_images=pages[1:])
 
 
-def create_output_files_transient(cosipy_yaml_input,lib_dir):
+def create_output_files_transient(cosipy_yaml_input,lib_dir,time_tot_start,time_tot_stop):
     import sys
     import os
     import re
@@ -976,7 +976,7 @@ def create_output_files_transient(cosipy_yaml_input,lib_dir):
         
         measured_l,measured_b,error_coo,maxumumTS=read_cosi_ts_detect(directory_output+'cosi-tsdetect_'+time_start+'.txt')
         if maxumumTS>float(threshold_TS):
-            select_data_transient(cosipy_yaml_input,lib_dir,time_start,time_stop,'/home/gamma/workspace/data/',0,0,id_transient)
+            select_data_transient(cosipy_yaml_input,lib_dir,time_start,time_stop,'/home/gamma/workspace/data/',0,0,id_transient,time_tot_start,time_tot_stop)
             id_transient+=1
 
     # Blind searches ###############
@@ -987,13 +987,13 @@ def create_output_files_transient(cosipy_yaml_input,lib_dir):
         timestart=t_scan_start_source + (time_frame*t_scan_delta)
         timestop= timestart + t_scan_delta
         if maxumumTS_tmp>float(threshold_TS):
-            select_data_transient(cosipy_yaml_input,lib_dir,timestart,timestop,'/home/gamma/workspace/data/',1,0,id_transient)
+            select_data_transient(cosipy_yaml_input,lib_dir,timestart,timestop,'/home/gamma/workspace/data/',1,0,id_transient,time_tot_start,time_tot_stop)
             id_transient+=1
         time_frame+=1
 
     # Anomaly detection + CNN output
     if AD_maximumloss>float(threshold_loss):
-        select_data_transient(cosipy_yaml_input,lib_dir,AD_tstart,AD_tstop,'/home/gamma/workspace/data/',0,1,id_transient)
+        select_data_transient(cosipy_yaml_input,lib_dir,AD_tstart,AD_tstop,'/home/gamma/workspace/data/',0,1,id_transient,time_tot_start,time_tot_stop)
         id_transient+=1
         
 def prepare_alert_external(cosipy_yaml_input,lib_dir):
@@ -1225,7 +1225,7 @@ def cleanup_and_format(cosipy_yaml_input,lib_dir):
 
     # since I cannot include the python_callable in the branch I need a tmp file with the list of external triggers
     subprocess.run('cat '+trigger_list+' > /home/gamma/tmp_trigger_list',shell=True)
-
+    
 
 def define_day_config(cosipy_yaml_input,lib_dir,dir_mon):
     # reads some standard configuration file, defines a specific format and saves the file
@@ -1233,9 +1233,13 @@ def define_day_config(cosipy_yaml_input,lib_dir,dir_mon):
     import io
     from funzioni_comuni import change_yaml_file,extract_date_strings,check_start_stop_time
     new_year,new_year_short,new_month,new_day,new_fraction=extract_date_strings(dir_mon)
+    
+    from yayc import Configurator
+    full_config = Configurator.open(cosipy_yaml_input)
+    trigger_list=full_config["general_pipeline_config"]["external_trigger_list"]
+
     save_path=""
     save_path2=""
-    
     with open(cosipy_yaml_input) as stream:
         try:
             data_yaml=yaml.safe_load(stream)
@@ -1262,6 +1266,7 @@ def define_day_config(cosipy_yaml_input,lib_dir,dir_mon):
 
     # check min and max time of the unbinned input file. Save the info in a tmp file
     start_time,stop_time=check_start_stop_time(lib_dir,cosipy_yaml_input,'/home/gamma/workspace/data/')
-
+    
+    
     return save_path2,start_time,stop_time
 

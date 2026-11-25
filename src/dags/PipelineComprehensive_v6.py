@@ -40,31 +40,32 @@ def build_custom(dag):
         python=EXTERNAL_PYTHON_COSIPY,
         python_callable=light_curve,
         op_kwargs={
-            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config')[0] }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
         },
         dag=dag,
     )
 
-    
     #######################################
     # bin source file
-    def binning_data(config_path: str, lib_dir: str):
+    def binning_data(config_path: str, lib_dir: str,t_start: int,t_stop: int):
         import os
         import sys
         import yaml
         sys.path.append(lib_dir)
 
         from pipeline_functions import execute_bindata_grb
-        execute_bindata_grb(config_path,lib_dir)
+        execute_bindata_grb(config_path,lib_dir,t_start,t_stop)
 
     ged_data_binning = ExternalPythonOperator(
         task_id="Data_Binning",
         python=EXTERNAL_PYTHON_COSIPY,
         python_callable=binning_data,
         op_kwargs={
-            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config')[0] }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
+            "t_start": "{{ ti.xcom_pull(task_ids='define_day_config')[1] }}",
+            "t_stop": "{{ ti.xcom_pull(task_ids='define_day_config')[2] }}",
         },
         dag=dag,
     )
@@ -72,22 +73,25 @@ def build_custom(dag):
     
     #######################################
     # bin background file
-    def binning_data_bk(config_path: str, lib_dir: str):
+    def binning_data_bk(config_path: str, lib_dir: str,t_start: int,t_stop: int):
         import os
         import sys
         import yaml
         sys.path.append(lib_dir)
 
         from pipeline_functions import execute_bindata_background
-        execute_bindata_background(config_path,lib_dir)
+        execute_bindata_background(config_path,lib_dir,t_start,t_stop)
 
     ged_data_binning_bk = ExternalPythonOperator(
         task_id="Background_Binning",
         python=EXTERNAL_PYTHON_COSIPY,
         python_callable=binning_data_bk,
         op_kwargs={
-            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config')[0] }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
+            "t_start": "{{ ti.xcom_pull(task_ids='define_day_config')[1] }}",
+            "t_stop": "{{ ti.xcom_pull(task_ids='define_day_config')[2] }}",
+
         },
         dag=dag,
     )
@@ -95,22 +99,25 @@ def build_custom(dag):
     
     #######################################
     # TS map scan
-    def ts_map_scan(config_path: str, lib_dir: str):
+    def ts_map_scan(config_path: str, lib_dir: str,t_start: int,t_stop: int):
         import os
         import sys
         import yaml
         sys.path.append(lib_dir)
 
         from pipeline_functions import execute_tsmap_scan
-        execute_tsmap_scan(config_path,lib_dir)
+        execute_tsmap_scan(config_path,lib_dir,t_start,t_stop)
 
     ged_ts_map_scan = ExternalPythonOperator(
         task_id="TSMap_scan",
         python=EXTERNAL_PYTHON_COSIPY,
         python_callable=ts_map_scan,
         op_kwargs={
-            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config')[0] }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
+            "t_start": "{{ ti.xcom_pull(task_ids='define_day_config')[1] }}",
+            "t_stop": "{{ ti.xcom_pull(task_ids='define_day_config')[2] }}",
+
         },
         dag=dag,
     )
@@ -132,7 +139,7 @@ def build_custom(dag):
         python=EXTERNAL_PYTHON_COSIPY,
         python_callable=ts_map_external,
         op_kwargs={
-            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config')[0] }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
         },
         dag=dag,
@@ -158,7 +165,7 @@ def build_custom(dag):
         task_id="check_external_trigg",
         python_callable=check_external_task,
         op_kwargs={
-            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config')[0] }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
         },
     )
@@ -167,11 +174,11 @@ def build_custom(dag):
     
     #######################################
     # Spectral fit 
-    def execute_spectral_fit(config_path: str, lib_dir: str,model_fit: int, scan_flag: int, flag_CNN_in: int):
+    def execute_spectral_fit(config_path: str, lib_dir: str,model_fit: int, scan_flag: int, flag_CNN_in: int,t_start: int,t_stop: int):
         import sys
         sys.path.append(lib_dir)
         from pipeline_functions import execute_threemlfit
-        execute_threemlfit(config_path,lib_dir,model_fit,scan_flag,flag_CNN_in)
+        execute_threemlfit(config_path,lib_dir,model_fit,scan_flag,flag_CNN_in,t_start,t_stop)
     
     fittask_externaltrigger = []
     for i in range(2):
@@ -186,11 +193,14 @@ def build_custom(dag):
         python=EXTERNAL_PYTHON_COSIPY,  # Specifica l'interprete dell'ambiente cosipy
         python_callable=execute_spectral_fit,
         op_kwargs={
-            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config')[0] }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
             "model_fit": i,
             "scan_flag": 0,
             "flag_CNN_in": 0,
+            "t_start": "{{ ti.xcom_pull(task_ids='define_day_config')[1] }}",
+            "t_stop": "{{ ti.xcom_pull(task_ids='define_day_config')[2] }}",
+
         },
 
         )
@@ -210,11 +220,13 @@ def build_custom(dag):
         python=EXTERNAL_PYTHON_COSIPY,  # Specifica l'interprete dell'ambiente cosipy
         python_callable=execute_spectral_fit,
         op_kwargs={
-            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config')[0] }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
             "model_fit": i,
             "scan_flag": 0,
             "flag_CNN_in": 1,
+            "t_start": "{{ ti.xcom_pull(task_ids='define_day_config')[1] }}",
+            "t_stop": "{{ ti.xcom_pull(task_ids='define_day_config')[2] }}",
         },
 
         )
@@ -233,11 +245,13 @@ def build_custom(dag):
         python=EXTERNAL_PYTHON_COSIPY,  # Specifica l'interprete dell'ambiente cosipy
         python_callable=execute_spectral_fit,
         op_kwargs={
-            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config')[0] }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
             "model_fit": i,
             "scan_flag": 1,
             "flag_CNN_in": 0,
+            "t_start": "{{ ti.xcom_pull(task_ids='define_day_config')[1] }}",
+            "t_stop": "{{ ti.xcom_pull(task_ids='define_day_config')[2] }}",
         },
 
         )
@@ -261,7 +275,7 @@ def build_custom(dag):
         python=EXTERNAL_PYTHON_COSIPY,
         python_callable=build_pdf,
         op_kwargs={
-            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config')[0] }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
         },
         dag=dag,
@@ -292,7 +306,7 @@ def build_custom(dag):
         python=EXTERNAL_PYTHON_COSIPY,
         python_callable=build_spectral_pdf,
         op_kwargs={
-            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config')[0] }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
             "model_merge": modelname
         },
@@ -317,7 +331,7 @@ def build_custom(dag):
         python=EXTERNAL_PYTHON_COSIPY,
         python_callable=build_alert_file,
         op_kwargs={
-            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config')[0] }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
         },
         dag=dag,
@@ -363,7 +377,7 @@ def build_custom(dag):
         python_callable=cleanup_funct,
         op_kwargs={
             #"config_path": cosipy_yaml_input_file_first,
-            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config')[0] }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
         },
         dag=dag,
@@ -372,22 +386,25 @@ def build_custom(dag):
     
     #######################################
     # Anomaly detection
-    def transient_id_anomaly(config_path: str, lib_dir: str):
+    def transient_id_anomaly(config_path: str, lib_dir: str,t_start: int,t_stop: int):
         import os
         import sys
         import yaml
         sys.path.append(lib_dir)
 
         from pipeline_functions import anomaly_detection_autoencoder
-        anomaly_detection_autoencoder(config_path,lib_dir)
+        anomaly_detection_autoencoder(config_path,lib_dir,t_start,t_stop)
 
     transient_id_anomaly_task = ExternalPythonOperator(
         task_id="AnomalyDetection",
         python=EXTERNAL_PYTHON_COSIPY,
         python_callable=transient_id_anomaly,
         op_kwargs={
-            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config')[0] }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
+            "t_start": "{{ ti.xcom_pull(task_ids='define_day_config')[1] }}",
+            "t_stop": "{{ ti.xcom_pull(task_ids='define_day_config')[2] }}",
+
         },
         dag=dag,
     )
@@ -395,48 +412,53 @@ def build_custom(dag):
     
     #######################################
     # CNN localization
-    def localization_cnn(config_path: str, lib_dir: str):
+    def localization_cnn(config_path: str, lib_dir: str,t_start: int,t_stop: int):
         import os
         import sys
         import yaml
         sys.path.append(lib_dir)
 
         from pipeline_functions import cnn_locate
-        cnn_locate(config_path,lib_dir)
+        cnn_locate(config_path,lib_dir,t_start,t_stop)
 
     localization_cnn_task = ExternalPythonOperator(
         task_id="CNN_localization",
         python=EXTERNAL_PYTHON_COSIPY,
         python_callable=localization_cnn,
         op_kwargs={
-            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config')[0] }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
+            "t_start": "{{ ti.xcom_pull(task_ids='define_day_config')[1] }}",
+            "t_stop": "{{ ti.xcom_pull(task_ids='define_day_config')[2] }}",
+
         },
         dag=dag,
     )
     
     #######################################
     #  save transient fits files
-    def transient_fits_save(config_path: str, lib_dir: str):
+    def transient_fits_save(config_path: str, lib_dir: str,time_tot_start: int,time_tot_stop: int):
         import os
         import sys
         import yaml
         sys.path.append(lib_dir)
 
         from pipeline_functions import create_output_files_transient
-        create_output_files_transient(config_path,lib_dir)
-
+        create_output_files_transient(config_path,lib_dir,time_tot_start,time_tot_stop)
+    
     save_fits = ExternalPythonOperator(
         task_id="save_transient_fits",
         python=EXTERNAL_PYTHON_COSIPY,
         python_callable=transient_fits_save,
         op_kwargs={
-            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config') }}",
+            "config_path": "{{ ti.xcom_pull(task_ids='define_day_config')[0] }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
+            "time_tot_start": "{{ ti.xcom_pull(task_ids='define_day_config')[1] }}",
+            "time_tot_stop": "{{ ti.xcom_pull(task_ids='define_day_config')[2] }}",
         },
         dag=dag,
     )
-      
+    
     #######################################
     
     #######################################
@@ -445,6 +467,7 @@ def build_custom(dag):
     join2 = EmptyOperator(task_id="join2")
     
     ######### wiring definition #####
+    
     define_config>>cleanup_task>>[ged_data_binning,ged_data_binning_bk]>>join
     join>>[ged_ts_map_scan,transient_id_anomaly_task,check_external_funct]
     check_external_funct>>ged_ts_map_external>>fittask_externaltrigger>>join2
@@ -452,6 +475,7 @@ def build_custom(dag):
     transient_id_anomaly_task>>localization_cnn_task>>fittask_CNN>>join2
     join2>>ged_light_curve>>build_pdf_task>>merge_spectral_fit_multiple>>save_fits>>build_alert_task
     
+    #define_config>>save_fits
     ################################
 
 

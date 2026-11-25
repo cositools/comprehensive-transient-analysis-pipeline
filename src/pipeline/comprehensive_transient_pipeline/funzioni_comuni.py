@@ -387,7 +387,7 @@ def check_start_stop_time(lib_dir,configfilename,datadir):
     hdul.close()
     return time_start_new,time_stop_new
 
-def select_data_transient(configfilename,lib_dir,t1,t2,datadir,scan_var,cnn_use,id_transient):
+def select_data_transient(configfilename,lib_dir,t1,t2,datadir,scan_var,cnn_use,id_transient,time_tot_start,time_tot_stop):
     import sys
     sys.path.append(lib_dir)
     import torch
@@ -429,8 +429,7 @@ def select_data_transient(configfilename,lib_dir,t1,t2,datadir,scan_var,cnn_use,
        outdir_tmp=outdir
        
     yaml_path        = out_tmp+'file_select_transient_'+str(time_start_new)+'.yaml'
-    start_time,stop_time=read_time_frame()
-    diff_time = int(time_start_new)-int(start_time)# time difference from start of file
+    diff_time = int(time_start_new)-int(round(float(time_tot_start))) # time difference from start of file
 
     print('DIFFTIME################################### ',diff_time)
     
