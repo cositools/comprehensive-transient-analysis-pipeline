@@ -33,15 +33,13 @@ def basic_light_curve(cosipy_yaml_input,lib_dir):
     histo_time.plot(ax=ax)   
     fig.savefig(directory_output+"light_curve.png", dpi=300)
     
-def execute_bindata_grb(cosipy_yaml_input,lib_dir):
+def execute_bindata_grb(cosipy_yaml_input,lib_dir,time_tot_start,time_tot_stop):
     import cosipy
     from cosipy.pipeline.task.task import cosi_bindata
     import subprocess
     from yayc import Configurator
     print('Binning source')
-    from funzioni_comuni import read_time_frame
-    time_tot_start,time_tot_stop=read_time_frame()
-
+    print('TSTART TSTOP  ',time_tot_start,time_tot_stop)
     full_config = Configurator.open(cosipy_yaml_input)
     t_scan_start_source=full_config["general_pipeline_config"]["t_scan_start_source"]
     t_scan_stop_source=full_config["general_pipeline_config"]["t_scan_stop_source"]
@@ -55,14 +53,12 @@ def execute_bindata_grb(cosipy_yaml_input,lib_dir):
     args=['--config',cosipy_yaml_input,'--config_group','bindata_soubk','--overwrite', '--suffix','galbk_grbdc3','--output-dir',directory_output,'--tmin', str(t_scan_start_source), '--tmax', str(t_scan_stop_source)]
     cosi_bindata (argv=args)
     
-def execute_bindata_background(cosipy_yaml_input,lib_dir):
+def execute_bindata_background(cosipy_yaml_input,lib_dir,time_tot_start,time_tot_stop):
     import cosipy
     from cosipy.pipeline.task.task import cosi_bindata
     import subprocess
     from yayc import Configurator
     print('Binning background ')
-    from funzioni_comuni import read_time_frame
-    time_tot_start,time_tot_stop=read_time_frame()
     print(time_tot_start,time_tot_stop)
 
     full_config = Configurator.open(cosipy_yaml_input)
@@ -75,7 +71,7 @@ def execute_bindata_background(cosipy_yaml_input,lib_dir):
     cosi_bindata (argv=args)
 
 
-def execute_tsmap_scan(cosipy_yaml_input,lib_dir):
+def execute_tsmap_scan(cosipy_yaml_input,lib_dir,time_tot_start,time_tot_stop):
     import cosipy
     import subprocess
     from contextlib import redirect_stdout
@@ -83,8 +79,6 @@ def execute_tsmap_scan(cosipy_yaml_input,lib_dir):
     from yayc import Configurator
     import sys
     sys.path.append(lib_dir)
-    from funzioni_comuni import read_time_frame
-    time_tot_start,time_tot_stop=read_time_frame()
 
     full_config = Configurator.open(cosipy_yaml_input)
     t_scan_start_source=full_config["general_pipeline_config"]["t_scan_start_source"]
@@ -153,7 +147,7 @@ def execute_tsmap_external(cosipy_yaml_input,lib_dir):
                 subprocess.run('mv '+directory_output+'raw_ts.png '+newpngFileName, shell=True)
                 subprocess.run('mv '+directory_output+'raw_ts.fits '+newfitsFileName, shell=True)
 
-def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
+def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir,time_tot_start,time_tot_stop):
     import cosipy
     import torch
     import torch.nn as nn
@@ -166,14 +160,13 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
     import sys
     sys.path.append(lib_dir)
     import healpy as hp
-    from funzioni_comuni import read_base_pipeline_params,read_file_histo,read_anomaly_detection_config,read_time_frame
+    from funzioni_comuni import read_base_pipeline_params,read_file_histo,read_anomaly_detection_config
     from models import Autoencoder
     from astropy.time import Time
     from histpy import Histogram
     from mhealpy import HealpixMap
     from scoords import SpacecraftFrame
     
-    time_tot_start,time_tot_stop=read_time_frame()
     print(time_tot_start,time_tot_stop)
 
     from yayc import Configurator
@@ -301,7 +294,7 @@ def anomaly_detection_autoencoder(cosipy_yaml_input,lib_dir):
     
     plt.savefig(directory_output+'imageLoss_GalCoord_rot.png')
 
-def cnn_locate(cosipy_yaml_input,lib_dir):
+def cnn_locate(cosipy_yaml_input,lib_dir,time_tot_start,time_tot_stop):
     import cosipy
     import torch
     import torch.nn as nn
@@ -314,7 +307,7 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     import sys
     sys.path.append(lib_dir)
     import healpy as hp
-    from funzioni_comuni import read_base_pipeline_params,read_file_histo2,read_anomaly_detection_config,read_file_histo_second,read_time_frame,read_cosi_AD_detect
+    from funzioni_comuni import read_base_pipeline_params,read_file_histo2,read_anomaly_detection_config,read_file_histo_second,read_cosi_AD_detect
     from models import CNN3D
     from astropy.time import Time
     from histpy import Histogram
@@ -324,7 +317,6 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     from astropy.coordinates import SkyCoord
     import astropy.units as u
 
-    time_tot_start,time_tot_stop=read_time_frame()
     print(time_tot_start,time_tot_stop)
 
     from yayc import Configurator
@@ -467,18 +459,17 @@ def cnn_locate(cosipy_yaml_input,lib_dir):
     print('tmax= ',int(t_scan_start_source)+int(diffstart),' max= ', float(lightCurveMax),file=file_CNN_save)
     file_CNN_save.close()
     
-def execute_threemlfit(cosipy_yaml_input,lib_dir,fitmodel,scanvar,CNNinput):
+def execute_threemlfit(cosipy_yaml_input,lib_dir,fitmodel,scanvar,CNNinput,time_tot_start,time_tot_stop):
     import cosipy
     from cosipy.pipeline.task.task import cosi_threemlfit
     import sys
     sys.path.append(lib_dir)
-    from funzioni_comuni import read_cosi_ts_detect,read_base_pipeline_params,format_override_val,read_trigger_content_multiple_yaml,read_time_frame,read_cosi_CNN_detect,read_cosi_AD_detect
+    from funzioni_comuni import read_cosi_ts_detect,read_base_pipeline_params,format_override_val,read_trigger_content_multiple_yaml,read_cosi_CNN_detect,read_cosi_AD_detect
     from PIL import Image, ImageDraw, ImageFont
     from threeML import JointLikelihood,DataList,XYLike,Model,PointSource,Constant
     import numpy as np
     import torch
 
-    time_tot_start,time_tot_stop=read_time_frame()
     print(time_tot_start,time_tot_stop)
 
     from yayc import Configurator
@@ -1243,7 +1234,7 @@ def define_day_config(cosipy_yaml_input,lib_dir,dir_mon):
     # reads some standard configuration file, defines a specific format and saves the file
     import yaml
     import io
-    from funzioni_comuni import change_yaml_file,extract_date_strings
+    from funzioni_comuni import change_yaml_file,extract_date_strings,check_start_stop_time
     new_year,new_year_short,new_month,new_day,new_fraction=extract_date_strings(dir_mon)
     save_path=""
     save_path2=""
@@ -1271,6 +1262,9 @@ def define_day_config(cosipy_yaml_input,lib_dir,dir_mon):
                 
         except yaml.YAMLError as exc:
             print(exc)
-            
-    return save_path2
+
+    # check min and max time of the unbinned input file. Save the info in a tmp file
+    start_time,stop_time=check_start_stop_time(lib_dir,cosipy_yaml_input,'/home/gamma/workspace/data/')
+
+    return save_path2,start_time,stop_time
 

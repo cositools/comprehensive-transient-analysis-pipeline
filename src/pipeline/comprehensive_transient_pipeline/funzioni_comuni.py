@@ -385,24 +385,7 @@ def check_start_stop_time(lib_dir,configfilename,datadir):
     time_start_new=time_arr.min().item()
     time_stop_new =time_arr.max().item()
     hdul.close()
-    
-    file_time_save = open('/home/gamma/tmp_time_frame','w')
-    print(int(time_start_new)+1,int(time_stop_new)-1,file=file_time_save)
-    file_time_save.close()
- 
     return time_start_new,time_stop_new
-
-def read_time_frame():
-    time1=-1
-    time2=-1
-    file_time_frame = open('/home/gamma/tmp_time_frame')
-    content_time_frame = file_time_frame.read().splitlines()
-    for line in content_time_frame:
-        line2=line.split()
-        time1=int(line2[0])
-        time2=int(line2[1])
-    file_time_frame.close()
-    return time1,time2
 
 def select_data_transient(configfilename,lib_dir,t1,t2,datadir,scan_var,cnn_use,id_transient):
     import sys
