@@ -1226,9 +1226,6 @@ def cleanup_and_format(cosipy_yaml_input,lib_dir):
     # since I cannot include the python_callable in the branch I need a tmp file with the list of external triggers
     subprocess.run('cat '+trigger_list+' > /home/gamma/tmp_trigger_list',shell=True)
 
-    # check min and max time of the unbinned input file. Save the info in a tmp file
-    start_time,stop_time=check_start_stop_time(lib_dir,cosipy_yaml_input,'/home/gamma/workspace/data/')
-
 
 def define_day_config(cosipy_yaml_input,lib_dir,dir_mon):
     # reads some standard configuration file, defines a specific format and saves the file
