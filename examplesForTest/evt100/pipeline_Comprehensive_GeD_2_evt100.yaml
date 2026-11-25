@@ -370,6 +370,8 @@ general_pipeline_config:
     parameter_range
   directory_output:
     /home/gamma/workspace/data/transient/2028_01/280101001u/current/products/
+  directory_output_trigg:
+    /home/gamma/workspace/data/transient/2028_01/280101001t/current/products/
   external_trigger_list:
     /home/gamma/workspace/data/obs/2028_01/280101/auxil/ListOfTriggers_evt100.txt
   ts_threshold:
