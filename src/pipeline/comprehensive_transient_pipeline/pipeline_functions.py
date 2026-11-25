@@ -1197,7 +1197,6 @@ def cleanup_and_format(cosipy_yaml_input,lib_dir):
     # clean up old files
     subprocess.run('mkdir '+directory_output+'timescan', shell=True)
 
-    subprocess.run('mv ~/tmp_trigger_list '+directory_output+'../../previous/products/', shell=True)
     subprocess.run('mv '+directory_output+'tsel_* '+directory_output+'../../previous/products/', shell=True)
     subprocess.run('mv '+directory_output+'bin* '+directory_output+'../../previous/products/', shell=True)
     subprocess.run('mv '+directory_output+'*png '+directory_output+'../../previous/products/', shell=True)
@@ -1222,9 +1221,6 @@ def cleanup_and_format(cosipy_yaml_input,lib_dir):
     subprocess.run('mv ' + fileName_toClean + ' '+directory_output+'../../previous/products/',shell=True)
     fileName_toClean = directory_output+"output_cnn.txt"
     subprocess.run('mv ' + fileName_toClean + ' '+directory_output+'../../previous/products/',shell=True)
-
-    # since I cannot include the python_callable in the branch I need a tmp file with the list of external triggers
-    subprocess.run('cat '+trigger_list+' > /home/gamma/tmp_trigger_list',shell=True)
     
 
 def define_day_config(cosipy_yaml_input,lib_dir,dir_mon):
@@ -1267,6 +1263,12 @@ def define_day_config(cosipy_yaml_input,lib_dir,dir_mon):
     # check min and max time of the unbinned input file. Save the info in a tmp file
     start_time,stop_time=check_start_stop_time(lib_dir,cosipy_yaml_input,'/home/gamma/workspace/data/')
     
-    
-    return save_path2,start_time,stop_time
+    externalFilesNames=[]
+    with open(trigger_list, "r", encoding="utf-8") as file:
+        for row in file:
+            fileName = row.strip()
+            print("Name external trigger file ",fileName)
+            externalFilesNames.append(fileName)
+
+    return save_path2,start_time,stop_time,externalFilesNames,len(externalFilesNames)
 

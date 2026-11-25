@@ -138,13 +138,6 @@ def read_trigger_content_multiple(filelistname):
     print('++++++++++++++------- ',externalTrigger_start)
     return externalTrigger_start,externalTrigger_stop,numFiles_trigger
 
-def count_trigger_num(filelistname):
-    f_file_list = open(filelistname)
-    content_file_list = f_file_list.read().splitlines()
-    numFiles_trigger = len(content_file_list)
-    print(numFiles_trigger," trigger files detected")
-    return numFiles_trigger
-
 def read_anomaly_detection_config(contentname):
     input_file_name=""
     model_file=""

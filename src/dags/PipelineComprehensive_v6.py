@@ -149,14 +149,15 @@ def build_custom(dag):
     #######################################
     # Check for external triggers
          
-    def check_external_task(config_path: str, lib_dir: str):
+    def check_external_task(config_path: str, lib_dir: str,ext_trigg_list_num: int):
         import os
         import sys
         import yaml
         sys.path.append(lib_dir)
         from funzioni_comuni import count_trigger_num
-        num_trigger = count_trigger_num('/home/gamma/tmp_trigger_list')
-        if num_trigger>0:
+        print('External trigger number ',ext_trigg_list_num)
+        # if num_trigger>0:
+        if int(ext_trigg_list_num)>0:
             return "TSMap_external"
         else:
             return None
@@ -167,6 +168,8 @@ def build_custom(dag):
         op_kwargs={
             "config_path": "{{ ti.xcom_pull(task_ids='define_day_config')[0] }}",
             "lib_dir": LIB_DIR_COMPREHENSIVE_TRANSIENT_PIPELINE,
+            "ext_trigg_list_num": "{{ ti.xcom_pull(task_ids='define_day_config')[4] }}",
+
         },
     )
         
