@@ -335,18 +335,18 @@ def read_trigger_content_multiple_yaml(lib_dir,filelistname):
     sys.path.append(lib_dir)
     import torch
     from yayc import Configurator
-
-    f_file_list = open(filelistname)
-    content_file_list = f_file_list.read().splitlines()
-
-    numFiles_trigger = len(content_file_list)
+    import yaml
+    
+    with open(filelistname, "r", encoding="utf-8") as f:
+        dati = yaml.safe_load(f)
+    
+    numFiles_trigger = len(dati.get("trigger_files"))
     print(numFiles_trigger," yaml trigger files detected")
     externalTrigger_start=torch.zeros(int(numFiles_trigger),dtype=torch.int64)
     externalTrigger_stop=torch.zeros(int(numFiles_trigger),dtype=torch.int64)
-    trigger_external=numFiles_trigger
     
     file_test=0
-    for line_file_name in content_file_list:        
+    for line_file_name in dati["trigger_files"]:
         full_config = Configurator.open(str(line_file_name))
         t_start_source=full_config["external_trigger"]["t_external_start"]
         t_stop_source=full_config["external_trigger"]["t_external_stop"]
@@ -356,7 +356,7 @@ def read_trigger_content_multiple_yaml(lib_dir,filelistname):
         externalTrigger_stop[file_test]=int(t_stop_source)
         file_test+=1
         
-    print('++++++++++++++------- ',externalTrigger_start)
+    print('externalTrigger_start ',externalTrigger_start)
     return externalTrigger_start,externalTrigger_stop,numFiles_trigger
 
 def check_start_stop_time(lib_dir,configfilename,datadir):
@@ -583,6 +583,19 @@ def change_yaml_file(data,new_year,new_month,new_day,new_fraction):
         data=data.replace("2028_01",new_year+"_"+new_month)
         data=data.replace("280101",new_year[2:]+new_month+new_day)
     return data
+
+def change_single_level_sub_files(config_file,dir_mon,new_year,new_month,new_day,new_fraction,new_year_short):
+    import yaml
+
+    newName=dir_mon+new_year+"_"+new_month+"/"+new_year_short+new_month+new_day+"/auxil/"
+    newName=newName+str(config_file)[52:]
+
+    with open(config_file) as stream:
+        data_yaml1=yaml.safe_load(stream)
+        data_yaml2=change_yaml_file(data_yaml1,new_year,new_month,new_day,new_fraction)
+        with open(newName, "w", encoding="utf-8") as f:
+            yaml.dump(data_yaml2, f, sort_keys=False)
+    return newName
 
 def extract_date_strings(dir_mon):
     # selects last directories and provides strings to change config files

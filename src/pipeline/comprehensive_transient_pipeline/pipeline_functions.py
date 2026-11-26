@@ -1227,12 +1227,14 @@ def define_day_config(cosipy_yaml_input,lib_dir,dir_mon):
     # reads some standard configuration file, defines a specific format and saves the file
     import yaml
     import io
-    from funzioni_comuni import change_yaml_file,extract_date_strings,check_start_stop_time
+    from funzioni_comuni import change_yaml_file,extract_date_strings,check_start_stop_time,change_single_level_sub_files
     new_year,new_year_short,new_month,new_day,new_fraction=extract_date_strings(dir_mon)
     
     from yayc import Configurator
     full_config = Configurator.open(cosipy_yaml_input)
     trigger_list=full_config["general_pipeline_config"]["external_trigger_list"]
+    anomaly_config_file = full_config["general_pipeline_config"]["anomaly_config"]
+    cnn_config_file =  full_config["general_pipeline_config"]["cnn_config"]
 
     save_path=""
     save_path2=""
@@ -1253,7 +1255,7 @@ def define_day_config(cosipy_yaml_input,lib_dir,dir_mon):
             with open(save_path, "w", encoding="utf-8") as f:
                 yaml.dump(data_yaml2, f, sort_keys=False)
                 
-            save_path2=dir_mon+"../"+new_config_name
+            save_path2=dir_mon+"../pipeline_Comprehensive_GCT_"+new_year_short+new_month+new_day+new_fraction+".yaml"
             with open(save_path2, "w", encoding="utf-8") as f:
                 yaml.dump(data_yaml2, f, sort_keys=False)
                 
@@ -1262,13 +1264,22 @@ def define_day_config(cosipy_yaml_input,lib_dir,dir_mon):
 
     # check min and max time of the unbinned input file. Save the info in a tmp file
     start_time,stop_time=check_start_stop_time(lib_dir,cosipy_yaml_input,'/home/gamma/workspace/data/')
-    
-    externalFilesNames=[]
-    with open(trigger_list, "r", encoding="utf-8") as file:
-        for row in file:
-            fileName = row.strip()
-            print("Name external trigger file ",fileName)
-            externalFilesNames.append(fileName)
 
-    return save_path2,start_time,stop_time,externalFilesNames,len(externalFilesNames)
+    # file external file names 
+    externalFilesNames=[]
+    with open(trigger_list, "r", encoding="utf-8") as f:
+        dati = yaml.safe_load(f)
+    
+    for line_file_name in dati["trigger_files"]:
+        externalFilesNames.append(str(line_file_name))
+
+    # updating external trigger list yaml
+    newName_list=change_single_level_sub_files(trigger_list,dir_mon,new_year,new_month,new_day,new_fraction,new_year_short)
+    # updating anomaly yaml
+    newName_anomaly=change_single_level_sub_files(anomaly_config_file,dir_mon,new_year,new_month,new_day,new_fraction,new_year_short)
+    
+    # updating cnn yaml
+    newName_cnn=change_single_level_sub_files(cnn_config_file,dir_mon,new_year,new_month,new_day,new_fraction,new_year_short)
+
+    return save_path2,start_time,stop_time,externalFilesNames,len(externalFilesNames),newName_list,newName_anomaly,newName_cnn
 
