@@ -11,21 +11,27 @@ How to test this first version:
 
 1) create under 
 	../cosiflow/data/
-	the ICD for Nov. 2026 structure:
+	the ICD directory structure (as of Nov. 2026):
+
 	Go to comprehensive-transient-analysis-pipeline/ 
-	directory and
-	run bash ./setup_directory.sh YYYY MM DD DD_FR directoryName
+	directory and run:
+
+	./setup_directory.sh YYYY MM DD DD_FR directoryName
+
 	where the parameters are year month day day_fraction (000 to 999) and the directory where you want to add the new directory structure
 	The baseline you should choose is ../cosiflow/data/.
 
-	Now the pipeline will automatically update all the references to the data and configuration directories inside the yaml file.
+2) Copy the test files with the devoted script:
+        Go to comprehensive-transient-analysis-pipeline/ 
+        directory and run (for example):
 
-2) Put 
-	data_grbdc3_full.fits
-	under
-	../cosiflow/data/obs/YYYY_MM/YYMMDD/gct/
+        ./copy_data.sh examplesForTest/evt1002/ ../cosiflow/data/obs/2028_01/280101/gct/ data_grbdc3_full.fits
+	
+	This will copy all the data and config files you need from the example evt1002. Use as destination directory the gct/ directory...
 
-	I can provide any simulated GRB under request.
+	Rember: now the pipeline will automatically update all the configurations inside the yaml files depending on the names of the data structure.
+        By-hand name configurations change should not be needed anymore.
+	Provide a baseline config (as the ones from the examples) and the pipeline should do everything is needed.
 
 3) Put  
 	FullSet_gamma_50ms.fits
@@ -45,46 +51,17 @@ How to test this first version:
 
 	(I don't upload these three files since they belong to the DC files. In case, for whatever reason,  you need to test with my files just ask...)
 
-	-This yes...
-
-	-examplesForTest/ListOfTriggers.txt
-
-	-examplesForTest/externalTriggerInfos1.yaml
-
-	-examplesForTest/externalTriggerInfos2.yaml
-
-	-examplesForTest/externalTriggerInfos3.yaml
-
-	-examplesForTest/AnomalyDetectionConfig.yaml
-
-	-examplesForTest/CNNLocalizationConfig.yaml
-
-	-examplesForTest/AnomalyDetectionConfig1002.yaml (for the 1.5 ks source)
-
-	-examplesForTest/CNNLocalizationConfig1002.yaml (for the 1.5 ks source)
-
 	under
 	../cosiflow/data/obs/YYYY_MM/YYMMDD/auxil/
 
+	You shold still copy these files by hand since I don't want to cp too many times ~20 GB files.
+
 	I provided several examples for testing purposes.
-	Check in the bottom what such events are...
-	Every file has its own configuration since the time frames are very different.
-	In standard operations the pipeline will do a scan on the entire file, now we want to test quickly.
+	Check at the bottom what such events are...
         Still, if you wish you can run the transient search on the full data set.
-	We also have a set of fake external triggers (that are obviously specific for each event).
-	Copy the files in the appropriate place and don't forget to change
-        cosipy_yaml_input_file = "/home/gamma/workspace/data/pipeline_Comprehensive_GeD_2*.yaml"
-	in the main PipelineComprehensive*py
+	We also have a set of external triggers (that are obviously specific for each event).
 
-5) Put:
-	pipeline_Comprehensive_GeD_2.yaml
-	and
-	pipeline_Comprehensive_BGO.yaml
-	
-	under 
-	../cosiflow/data/
-
-6) And run through the interface of cosiflow. For any problem/comment feedback is appreciated.
+6) And finally run through the interface of cosiflow. For any problem/comment feedback is appreciated.
 
 *) What the test files are:
 
