@@ -29,7 +29,7 @@ How to test this first version:
 	
 	This will copy all the data and config files you need from the example evt1002. Use as destination directory the gct/ directory...
 
-	Rember: now the pipeline will automatically update all the configurations inside the yaml files depending on the names of the data structure.
+	Rember: now the pipeline will automatically update all the configurations inside the yaml files depending on the names of the directory structure.
         By-hand name configurations change should not be needed anymore.
 	Provide a baseline config (as the ones from the examples) and the pipeline should do everything is needed.
 
