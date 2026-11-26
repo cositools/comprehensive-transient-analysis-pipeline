@@ -1,3 +1,0 @@
-/home/gamma/workspace/data/obs/2028_01/280101/auxil/externalTriggerInfos1_evt14.yaml
-/home/gamma/workspace/data/obs/2028_01/280101/auxil/externalTriggerInfos2_evt14.yaml
-/home/gamma/workspace/data/obs/2028_01/280101/auxil/externalTriggerInfos3_evt14.yaml

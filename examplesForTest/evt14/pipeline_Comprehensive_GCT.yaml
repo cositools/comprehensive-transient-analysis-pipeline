@@ -49,13 +49,13 @@ threeml_source_models:
 
           K:
 
-            value: 1000.
+            value: 0.1
 
             desc: Normalization (differential flux at the pivot value)
 
             min_value: 1.0e-30
 
-            max_value: 100000.0
+            max_value: 1000.0
 
             unit: keV-1 s-1 cm-2
 
@@ -152,13 +152,13 @@ threeml_source_models:
 
             K:
 
-              value: 100.
+              value: 0.1
 
               desc: Differential flux at the pivot energy
 
               min_value: 1.0e-10
 
-              max_value: 1000
+              max_value: 1
 
               unit: keV-1 s-1 cm-2
 
@@ -357,13 +357,13 @@ threemlfit_band:
 
 general_pipeline_config:
   t_scan_start_source:
-    1840535050
+    1835582170
   t_scan_stop_source:
-    1840535140
+    1835582260
   t_scan_start_back:
-    1840532580
+    1835579700
   t_scan_stop_back:
-    1840537580
+    1835584700
   t_scan_delta:
     10
   t_range_type:
@@ -373,7 +373,7 @@ general_pipeline_config:
   directory_output_trigg:
     /home/gamma/workspace/data/transient/2028_01/280101001t/current/products/
   external_trigger_list:
-    /home/gamma/workspace/data/obs/2028_01/280101/auxil/ListOfTriggers_evt3.txt
+    /home/gamma/workspace/data/obs/2028_01/280101/auxil/ListOfTriggers.txt
   ts_threshold:
     10
   anomaly_config:
@@ -385,6 +385,6 @@ general_pipeline_config:
   show_true_position:
     True
   true_position_b:
-    -70.96845092592254
+    3.9863294110981724
   true_position_l:
-    151.33464251596877
+    255.60010098400392
